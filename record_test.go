@@ -1,0 +1,291 @@
+// (C) 2014 Cybozu.  All rights reserved.
+// Use of this source code is governed by a BSD-style license
+// that can be found in the LICENSE file.
+
+package kintone
+
+import (
+	"testing"
+	"time"
+)
+
+func TestDecodeRecord(t *testing.T) {
+	t.Parallel()
+
+	j := []byte(`
+{
+    "record": {
+        "record_id": {
+            "type": "RECORD_NUMBER",
+            "value": "1"
+        },
+        "created_time": {
+            "type": "CREATED_TIME",
+            "value": "2012-02-03T08:50:00Z"
+        },
+        "dropdown": {
+            "type": "DROP_DOWN",
+            "value": "Option1"
+        },
+        "1line": {
+            "type": "SINGLE_LINE_TEXT",
+            "value": "hoge"
+        },
+        "2line": {
+            "type": "MULTI_LINE_TEXT",
+            "value": "hoge\nfuga"
+        },
+        "number": {
+            "type": "NUMBER",
+            "value": "123.456"
+        },
+        "check_box": {
+            "type": "CHECK_BOX",
+            "value": ["a", "b"]
+        },
+        "file": {
+            "type": "FILE",
+            "value": [
+    {
+        "contentType": "text/plain",
+        "fileKey":"201202061155587E339F9067544F1A92C743460E3D12B3297",
+        "name": "17to20_VerupLog (1).txt",
+        "size": "12345"
+    },
+    {
+        "contentType": "text/plain",
+        "fileKey": "201202061155583C763E30196F419E83E91D2E4A03746C273",
+        "name": "17to20_VerupLog.txt",
+        "size": "23175"
+    }
+]
+        },
+        "date": {
+            "type": "DATE",
+            "value": "1974-04-04"
+        },
+        "time": {
+            "type": "TIME",
+            "value": "09:53"
+        },
+        "time2": {
+            "type": "TIME",
+            "value": "10:04:37"
+        },
+        "datetime": {
+            "type": "DATETIME",
+            "value": "2012-01-11T11:30:00Z"
+        },
+        "user": {
+            "type": "USER_SELECT",
+            "value": [
+    {
+        "code": "sato",
+        "name": "Noboru Sato"
+     }
+]
+        }
+    }
+}`)
+	rec, err := DecodeRecord(j)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := rec["record_id"].(RecordNumberField); !ok {
+		t.Error("Not a RecordNumberField")
+	}
+	if rec["record_id"] != RecordNumberField("1") {
+		t.Error("record_id mismatch")
+	}
+	ctime, ok := rec["created_time"].(CreationTimeField)
+	if !ok {
+		t.Error("Not a CreationTimeField")
+	}
+	if time.Time(ctime).Year() != 2012 {
+		t.Error("Year != 2012")
+	}
+	if time.Time(ctime).Month() != time.February {
+		t.Error("Month != February")
+	}
+	if time.Time(ctime).Day() != 3 {
+		t.Error("Day != 3")
+	}
+	if time.Time(ctime).Hour() != 8 {
+		t.Error("Hour != 8")
+	}
+	if time.Time(ctime).Minute() != 50 {
+		t.Error("Minute != 50")
+	}
+	if time.Time(ctime).Second() != 0 {
+		t.Error("Second != 0")
+	}
+	dropdown, ok := rec["dropdown"].(SingleSelectField)
+	if !ok {
+		t.Error("Not a SingleSelectField")
+	}
+	if !dropdown.Valid {
+		t.Error("Invalid dropdown")
+	}
+	if dropdown.String != "Option1" {
+		t.Error("dropdown mismatch")
+	}
+	if _, ok := rec["1line"].(SingleLineTextField); !ok {
+		t.Error("Not a SingleLineTextField")
+	}
+	if rec["1line"] != SingleLineTextField("hoge") {
+		t.Error("1line mismatch")
+	}
+	if _, ok := rec["2line"].(MultiLineTextField); !ok {
+		t.Error("Not a MultiLineTextField")
+	}
+	if rec["2line"] != MultiLineTextField("hoge\nfuga") {
+		t.Error("2line mismatch")
+	}
+	num, ok := rec["number"].(DecimalField)
+	if !ok {
+		t.Error("Not a DecimalField")
+	}
+	if num != DecimalField("123.456") {
+		t.Error("number mismatch")
+	}
+	check_box, ok := rec["check_box"].(CheckBoxField)
+	if !ok {
+		t.Error("Not a CheckBoxField")
+	}
+	if len(check_box) != 2 {
+		t.Error("check_box mismatch")
+	}
+	file, ok := rec["file"].(FileField)
+	if !ok {
+		t.Error("Not a FileField")
+	}
+	if file[0].Size != 12345 {
+		t.Error("file size mismatch")
+	}
+	if file[1].Name != "17to20_VerupLog.txt" {
+		t.Error("file name mismatch")
+	}
+	date, ok := rec["date"].(DateField)
+	if !ok {
+		t.Error("Not a DateField")
+	}
+	if !date.Valid {
+		t.Error("date invalid")
+	}
+	if date.Date.Year() != 1974 {
+		t.Error("Year != 1974")
+	}
+	if date.Date.Month() != time.April {
+		t.Error("Month != April")
+	}
+	if date.Date.Day() != 4 {
+		t.Error("Day != 4")
+	}
+	time1, ok := rec["time"].(TimeField)
+	if !ok {
+		t.Error("Not a TimeField")
+	}
+	if !time1.Valid {
+		t.Error("time1 invalid")
+	}
+	if time1.Time.Hour() != 9 {
+		t.Error("Hour != 9")
+	}
+	if time1.Time.Minute() != 53 {
+		t.Error("Minute != 53")
+	}
+	if time1.Time.Second() != 0 {
+		t.Error("Second != 0")
+	}
+	time2, ok := rec["time2"].(TimeField)
+	if !ok {
+		t.Error("Not a TimeField")
+	}
+	if !time2.Valid {
+		t.Error("time2 invalid")
+	}
+	if time2.Time.Hour() != 10 {
+		t.Error("Hour != 10")
+	}
+	if time2.Time.Minute() != 4 {
+		t.Error("Minute != 4")
+	}
+	if time2.Time.Second() != 37 {
+		t.Error("Second != 37")
+	}
+	dt, ok := rec["datetime"].(DateTimeField)
+	if !ok {
+		t.Error("Not a DateTimeField")
+	}
+	if time.Time(dt).Hour() != 11 {
+		t.Error("Hour != 11")
+	}
+	if time.Time(dt).Minute() != 30 {
+		t.Error("Minute != 30")
+	}
+	user, ok := rec["user"].(UserField)
+	if !ok {
+		t.Error("Not a UserField")
+	}
+	if user[0].Code != "sato" {
+		t.Error("user code mismatch")
+	}
+	if user[0].Name != "Noboru Sato" {
+		t.Error("user name mismatch")
+	}
+}
+
+func TestDecodeRecords(t *testing.T) {
+	t.Parallel()
+
+	j := []byte(`
+{
+    "records": [
+        {
+            "record_id": {
+                "type": "RECORD_NUMBER",
+                "value": "1"
+            },
+            "created_time": {
+                "type": "CREATED_TIME",
+                "value": "2012-02-03T08:50:00Z"
+            },
+            "dropdown": {
+                "type": "DROP_DOWN",
+                "value": null
+            }
+        },
+        {
+            "record_id": {
+                "type": "RECORD_NUMBER",
+                "value": "2"
+            },
+            "created_time": {
+                "type": "CREATED_TIME",
+                "value": "2012-02-03T09:22:00Z"
+            },
+            "dropdown": {
+                "type": "DROP_DOWN",
+                "value": null
+            }
+        }
+    ]
+}`)
+	rec, err := DecodeRecords(j)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(rec) != 2 {
+		t.Error("length mismatch")
+	}
+	if _, ok := rec[0]["record_id"]; !ok {
+		t.Error("record_id must exist")
+	}
+	dropdown, ok := rec[0]["dropdown"]
+	if !ok {
+		t.Error("null dropdown field must exist")
+	}
+	if dropdown.(SingleSelectField).Valid {
+		t.Error("dropdown must be invalid")
+	}
+}
