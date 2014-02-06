@@ -5,8 +5,9 @@ Go binding for kintone API
 A lot of APIs are not covered yet.  Bugs must lurk.  You are warned.
 
 This package provides a convenient interface for Go language
-to access [kintone][] with [its official REST API][API].
-[kintone][] is our cloud application building service.
+to access [kintone][] with its official REST API ([en][APIen], [ja][APIja]).
+
+[kintone][] is our B2B cloud service; you can create great web apps instantly with kintone!
 
 License
 -------
@@ -30,6 +31,7 @@ To import this package:
 Visit the docs on [godoc.org][godoc].
 
 [kintone]: https://kintone.cybozu.com/us/
-[API]: https://developers.cybozu.com/ja/kintone-api/app-api.html
+[APIen]: http://developers.kintone.com/
+[APIja]: https://developers.cybozu.com/
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
 [godoc]: http://godoc.org/github.com/cybozu/go-kintone

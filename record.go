@@ -16,9 +16,6 @@ import (
 // In fact, Record is a mapping between field IDs and fields.
 // Although field types are shown as interface{}, they are guaranteed
 // to be one of a *Field type in this package.
-//
-// Fields whose values may be NULL such as DROP_DOWN may not be included
-// when the value is NULL.
 type Record map[string]interface{}
 
 // Id returns the record number.

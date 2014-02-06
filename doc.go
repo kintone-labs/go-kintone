@@ -1,7 +1,7 @@
 /*
 Package kintone provides interfaces for kintone REST API.
 
-See https://developers.cybozu.com/ja/kintone-api/app-api.html for API specs.
+See http://developers.kintone.com/ for API specs.
 
 To retrieve 3 records from a kintone app (id=25):
 
@@ -10,7 +10,7 @@ To retrieve 3 records from a kintone app (id=25):
 		"log"
 	)
 	...
-	app := kintone.App{
+	app := &kintone.App{
 		"example.cybozu.com",
 		"user1",
 		"password",
