@@ -1,8 +1,10 @@
 Go binding for kintone API
 ==========================
 
-**WARNING** This package is currently in its infancy.
-A lot of APIs are not covered yet.  Bugs must lurk.  You are warned.
+**WARNING**
+This binding (and kintone itself) is not mature.
+Backward compatibility may not be kept.  Use with caution.
+You have been warned.
 
 This package provides a convenient interface for Go language
 to access [kintone][] with its official REST API ([en][APIen], [ja][APIja]).
