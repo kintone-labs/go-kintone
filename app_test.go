@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 )
 
 func newApp(appId uint64) *App {
@@ -29,10 +30,10 @@ func TestGetRecord(t *testing.T) {
 	if rec, err := a.GetRecord(116); err != nil {
 		t.Error(err)
 	} else {
-		if rec.Id() != "116" {
-			t.Errorf("Unexpected Id: ", rec.Id())
+		if rec.Id() != 116 {
+			t.Errorf("Unexpected Id: %d", rec.Id())
 		}
-		for _, f := range rec {
+		for _, f := range rec.Fields {
 			if files, ok := f.(FileField); ok {
 				if len(files) == 0 {
 					continue
@@ -77,20 +78,24 @@ func TestAddRecord(t *testing.T) {
 		t.Error("Upload failed", err)
 	}
 
-	rec := Record{
+	rec := NewRecord(map[string]interface{}{
 		"title": SingleLineTextField("test!"),
 		"file": FileField{
 			{FileKey: fileKey},
 		},
-	}
+	})
 	_, err = a.AddRecord(rec)
 	if err != nil {
 		t.Error("AddRecord failed", rec)
 	}
 
-	recs := []Record{
-		{"title": SingleLineTextField("multi add 1")},
-		{"title": SingleLineTextField("multi add 2")},
+	recs := []*Record{
+		NewRecord(map[string]interface{}{
+			"title": SingleLineTextField("multi add 1"),
+		}),
+		NewRecord(map[string]interface{}{
+			"title": SingleLineTextField("multi add 2"),
+		}),
 	}
 	ids, err := a.AddRecords(recs)
 	if err != nil {
@@ -106,19 +111,23 @@ func TestUpdateRecord(t *testing.T) {
 		t.Skip()
 	}
 
-	rec := Record{
-		"title": SingleLineTextField("new title"),
+	rec, err := a.GetRecord(4)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if err := a.UpdateRecord(4, rec); err != nil {
+	rec.Fields["title"] = SingleLineTextField("new title")
+	if err := a.UpdateRecord(rec, true); err != nil {
 		t.Error("UpdateRecord failed", err)
 	}
 
-	recs := map[uint64]Record{
-		1: {"title": SingleLineTextField("updated 1")},
-		2: {"title": SingleLineTextField("updated 2")},
-		3: {"title": SingleLineTextField("updated 3")},
+	recs, err := a.GetRecords(nil, "limit 3")
+	if err != nil {
+		t.Fatal(err)
 	}
-	if err := a.UpdateRecords(recs); err != nil {
+	for _, rec := range recs {
+		rec.Fields["title"] = SingleLineTextField(time.Now().String())
+	}
+	if err := a.UpdateRecords(recs, true); err != nil {
 		t.Error("UpdateRecords failed", err)
 	}
 }

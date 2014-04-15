@@ -9,6 +9,26 @@ import (
 	"time"
 )
 
+func TestNumericId(t *testing.T) {
+	if rev, err := numericId("33"); err != nil {
+		t.Error(err)
+	} else {
+		if rev != 33 {
+			t.Error("33")
+		}
+	}
+	if rev, err := numericId("INFRA-34"); err != nil {
+		t.Error(err)
+	} else {
+		if rev != 34 {
+			t.Error("INFRA-34")
+		}
+	}
+	if _, err := numericId("INFRA_35"); err == nil {
+		t.Error("INFRA_35 must fail")
+	}
+}
+
 func TestDecodeRecord(t *testing.T) {
 	t.Parallel()
 
@@ -84,20 +104,28 @@ func TestDecodeRecord(t *testing.T) {
         "name": "Noboru Sato"
      }
 ]
+        },
+        "$revision": {
+            "type": "__REVISION__",
+            "value": "7"
         }
     }
 }`)
 	rec, err := DecodeRecord(j)
+	fields := rec.Fields
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := rec["record_id"].(RecordNumberField); !ok {
+	if rec.Revision() != 7 {
+		t.Errorf("rec.Revision() != 7 (%d)", rec.Revision())
+	}
+	if _, ok := fields["record_id"].(RecordNumberField); !ok {
 		t.Error("Not a RecordNumberField")
 	}
-	if rec["record_id"] != RecordNumberField("1") {
+	if fields["record_id"] != RecordNumberField("1") {
 		t.Error("record_id mismatch")
 	}
-	ctime, ok := rec["created_time"].(CreationTimeField)
+	ctime, ok := fields["created_time"].(CreationTimeField)
 	if !ok {
 		t.Error("Not a CreationTimeField")
 	}
@@ -119,7 +147,7 @@ func TestDecodeRecord(t *testing.T) {
 	if time.Time(ctime).Second() != 0 {
 		t.Error("Second != 0")
 	}
-	dropdown, ok := rec["dropdown"].(SingleSelectField)
+	dropdown, ok := fields["dropdown"].(SingleSelectField)
 	if !ok {
 		t.Error("Not a SingleSelectField")
 	}
@@ -129,33 +157,33 @@ func TestDecodeRecord(t *testing.T) {
 	if dropdown.String != "Option1" {
 		t.Error("dropdown mismatch")
 	}
-	if _, ok := rec["1line"].(SingleLineTextField); !ok {
+	if _, ok := fields["1line"].(SingleLineTextField); !ok {
 		t.Error("Not a SingleLineTextField")
 	}
-	if rec["1line"] != SingleLineTextField("hoge") {
+	if fields["1line"] != SingleLineTextField("hoge") {
 		t.Error("1line mismatch")
 	}
-	if _, ok := rec["2line"].(MultiLineTextField); !ok {
+	if _, ok := fields["2line"].(MultiLineTextField); !ok {
 		t.Error("Not a MultiLineTextField")
 	}
-	if rec["2line"] != MultiLineTextField("hoge\nfuga") {
+	if fields["2line"] != MultiLineTextField("hoge\nfuga") {
 		t.Error("2line mismatch")
 	}
-	num, ok := rec["number"].(DecimalField)
+	num, ok := fields["number"].(DecimalField)
 	if !ok {
 		t.Error("Not a DecimalField")
 	}
 	if num != DecimalField("123.456") {
 		t.Error("number mismatch")
 	}
-	check_box, ok := rec["check_box"].(CheckBoxField)
+	check_box, ok := fields["check_box"].(CheckBoxField)
 	if !ok {
 		t.Error("Not a CheckBoxField")
 	}
 	if len(check_box) != 2 {
 		t.Error("check_box mismatch")
 	}
-	file, ok := rec["file"].(FileField)
+	file, ok := fields["file"].(FileField)
 	if !ok {
 		t.Error("Not a FileField")
 	}
@@ -165,7 +193,7 @@ func TestDecodeRecord(t *testing.T) {
 	if file[1].Name != "17to20_VerupLog.txt" {
 		t.Error("file name mismatch")
 	}
-	date, ok := rec["date"].(DateField)
+	date, ok := fields["date"].(DateField)
 	if !ok {
 		t.Error("Not a DateField")
 	}
@@ -181,7 +209,7 @@ func TestDecodeRecord(t *testing.T) {
 	if date.Date.Day() != 4 {
 		t.Error("Day != 4")
 	}
-	time1, ok := rec["time"].(TimeField)
+	time1, ok := fields["time"].(TimeField)
 	if !ok {
 		t.Error("Not a TimeField")
 	}
@@ -197,7 +225,7 @@ func TestDecodeRecord(t *testing.T) {
 	if time1.Time.Second() != 0 {
 		t.Error("Second != 0")
 	}
-	time2, ok := rec["time2"].(TimeField)
+	time2, ok := fields["time2"].(TimeField)
 	if !ok {
 		t.Error("Not a TimeField")
 	}
@@ -213,7 +241,7 @@ func TestDecodeRecord(t *testing.T) {
 	if time2.Time.Second() != 37 {
 		t.Error("Second != 37")
 	}
-	dt, ok := rec["datetime"].(DateTimeField)
+	dt, ok := fields["datetime"].(DateTimeField)
 	if !ok {
 		t.Error("Not a DateTimeField")
 	}
@@ -223,7 +251,7 @@ func TestDecodeRecord(t *testing.T) {
 	if time.Time(dt).Minute() != 30 {
 		t.Error("Minute != 30")
 	}
-	user, ok := rec["user"].(UserField)
+	user, ok := fields["user"].(UserField)
 	if !ok {
 		t.Error("Not a UserField")
 	}
@@ -278,10 +306,10 @@ func TestDecodeRecords(t *testing.T) {
 	if len(rec) != 2 {
 		t.Error("length mismatch")
 	}
-	if _, ok := rec[0]["record_id"]; !ok {
+	if _, ok := rec[0].Fields["record_id"]; !ok {
 		t.Error("record_id must exist")
 	}
-	dropdown, ok := rec[0]["dropdown"]
+	dropdown, ok := rec[0].Fields["dropdown"]
 	if !ok {
 		t.Error("null dropdown field must exist")
 	}

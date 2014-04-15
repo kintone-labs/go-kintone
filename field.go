@@ -36,6 +36,7 @@ const (
 	FT_MODIFIER         = "MODIFIER"
 	FT_MTIME            = "UPDATED_TIME"
 	FT_SUBTABLE         = "SUBTABLE"
+	FT_REVISION         = "__REVISION__"
 )
 
 // SingleLineTextField is a field type for single-line texts.

@@ -8,26 +8,44 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
 // Record represens a record in an application.
 //
-// In fact, Record is a mapping between field IDs and fields.
+// Fields is a mapping between field IDs and fields.
 // Although field types are shown as interface{}, they are guaranteed
 // to be one of a *Field type in this package.
-type Record map[string]interface{}
+type Record struct {
+	id       uint64
+	revision int64
+	Fields   map[string]interface{}
+}
+
+// NewRecord creates an instance of Record.
+//
+// The revision number is initialized to -1.
+func NewRecord(fields map[string]interface{}) *Record {
+	return &Record{0, -1, fields}
+}
+
+// MarshalJSON marshals field data of a record into JSON.
+func (rec Record) MarshalJSON() ([]byte, error) {
+	return json.Marshal(rec.Fields)
+}
 
 // Id returns the record number.
 //
 // A record number is unique within an application.
-func (rec Record) Id() string {
-	for _, field := range map[string]interface{}(rec) {
-		if id, ok := field.(RecordNumberField); ok {
-			return string(id)
-		}
-	}
-	panic("No record number field")
+func (rec Record) Id() uint64 {
+	return rec.id
+}
+
+// Revision returns the record revision number.
+func (rec Record) Revision() int64 {
+	return rec.revision
 }
 
 // Assert string list.
@@ -53,37 +71,51 @@ func userList(l []interface{}) ([]User, error) {
 	return ul, nil
 }
 
+// Convert string "record number" into an integer.
+func numericId(id string) (uint64, error) {
+	n := strings.LastIndex(id, "-")
+	if n != -1 {
+		id = id[(n + 1):]
+	}
+	nid, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return nid, nil
+}
+
 type recordData map[string]struct {
 	Type  string      `json:"type"`
 	Value interface{} `json:"value"`
 }
 
-func decodeRecordData(data recordData) (Record, error) {
-	rec := make(map[string]interface{})
+func decodeRecordData(data recordData) (*Record, error) {
+	fields := make(map[string]interface{})
+	rec := &Record{0, -1, fields}
 	for key, v := range data {
 		switch v.Type {
 		case FT_SINGLE_LINE_TEXT:
-			rec[key] = SingleLineTextField(v.Value.(string))
+			fields[key] = SingleLineTextField(v.Value.(string))
 		case FT_MULTI_LINE_TEXT:
-			rec[key] = MultiLineTextField(v.Value.(string))
+			fields[key] = MultiLineTextField(v.Value.(string))
 		case FT_RICH_TEXT:
-			rec[key] = RichTextField(v.Value.(string))
+			fields[key] = RichTextField(v.Value.(string))
 		case FT_DECIMAL:
-			rec[key] = DecimalField(v.Value.(string))
+			fields[key] = DecimalField(v.Value.(string))
 		case FT_CALC:
-			rec[key] = CalcField(v.Value.(string))
+			fields[key] = CalcField(v.Value.(string))
 		case FT_CHECK_BOX:
-			rec[key] = CheckBoxField(stringList(v.Value.([]interface{})))
+			fields[key] = CheckBoxField(stringList(v.Value.([]interface{})))
 		case FT_RADIO:
-			rec[key] = RadioButtonField(v.Value.(string))
+			fields[key] = RadioButtonField(v.Value.(string))
 		case FT_SINGLE_SELECT:
 			if v.Value == nil {
-				rec[key] = SingleSelectField{Valid: false}
+				fields[key] = SingleSelectField{Valid: false}
 			} else {
-				rec[key] = SingleSelectField{v.Value.(string), true}
+				fields[key] = SingleSelectField{v.Value.(string), true}
 			}
 		case FT_MULTI_SELECT:
-			rec[key] = MultiSelectField(stringList(v.Value.([]interface{})))
+			fields[key] = MultiSelectField(stringList(v.Value.([]interface{})))
 		case FT_FILE:
 			b1, err := json.Marshal(v.Value)
 			if err != nil {
@@ -94,22 +126,22 @@ func decodeRecordData(data recordData) (Record, error) {
 			if err != nil {
 				return nil, err
 			}
-			rec[key] = FileField(fl)
+			fields[key] = FileField(fl)
 		case FT_LINK:
-			rec[key] = LinkField(v.Value.(string))
+			fields[key] = LinkField(v.Value.(string))
 		case FT_DATE:
 			if v.Value == nil {
-				rec[key] = DateField{Valid: false}
+				fields[key] = DateField{Valid: false}
 			} else {
 				d, err := time.Parse("2006-01-02", v.Value.(string))
 				if err != nil {
 					return nil, fmt.Errorf("Invalid date: %v", v.Value)
 				}
-				rec[key] = DateField{d, true}
+				fields[key] = DateField{d, true}
 			}
 		case FT_TIME:
 			if v.Value == nil {
-				rec[key] = TimeField{Valid: false}
+				fields[key] = TimeField{Valid: false}
 			} else {
 				t, err := time.Parse("15:04", v.Value.(string))
 				if err != nil {
@@ -118,7 +150,7 @@ func decodeRecordData(data recordData) (Record, error) {
 						return nil, fmt.Errorf("Invalid time: %v", v.Value)
 					}
 				}
-				rec[key] = TimeField{t, true}
+				fields[key] = TimeField{t, true}
 			}
 		case FT_DATETIME:
 			if s, ok := v.Value.(string); ok {
@@ -126,29 +158,34 @@ func decodeRecordData(data recordData) (Record, error) {
 				if err != nil {
 					return nil, fmt.Errorf("Invalid datetime: %v", v.Value)
 				}
-				rec[key] = DateTimeField(dt)
+				fields[key] = DateTimeField(dt)
 			}
 		case FT_USER:
 			ul, err := userList(v.Value.([]interface{}))
 			if err != nil {
 				return nil, err
 			}
-			rec[key] = UserField(ul)
+			fields[key] = UserField(ul)
 		case FT_CATEGORY:
-			rec[key] = CategoryField(stringList(v.Value.([]interface{})))
+			fields[key] = CategoryField(stringList(v.Value.([]interface{})))
 		case FT_STATUS:
-			rec[key] = StatusField(v.Value.(string))
+			fields[key] = StatusField(v.Value.(string))
 		case FT_ASSIGNEE:
 			al, err := userList(v.Value.([]interface{}))
 			if err != nil {
 				return nil, err
 			}
-			rec[key] = AssigneeField(al)
+			fields[key] = AssigneeField(al)
 		case FT_ID:
-			rec[key] = RecordNumberField(v.Value.(string))
+			if nid, err := numericId(v.Value.(string)); err != nil {
+				return nil, err
+			} else {
+				rec.id = nid
+			}
+			fields[key] = RecordNumberField(v.Value.(string))
 		case FT_CREATOR:
 			creator := v.Value.(map[string]interface{})
-			rec[key] = CreatorField{
+			fields[key] = CreatorField{
 				creator["code"].(string),
 				creator["name"].(string),
 			}
@@ -157,10 +194,10 @@ func decodeRecordData(data recordData) (Record, error) {
 			if ctime.UnmarshalText([]byte(v.Value.(string))) != nil {
 				return nil, fmt.Errorf("Invalid datetime: %v", v.Value)
 			}
-			rec[key] = CreationTimeField(ctime)
+			fields[key] = CreationTimeField(ctime)
 		case FT_MODIFIER:
 			modifier := v.Value.(map[string]interface{})
-			rec[key] = ModifierField{
+			fields[key] = ModifierField{
 				modifier["code"].(string),
 				modifier["name"].(string),
 			}
@@ -169,7 +206,7 @@ func decodeRecordData(data recordData) (Record, error) {
 			if mtime.UnmarshalText([]byte(v.Value.(string))) != nil {
 				return nil, fmt.Errorf("Invalid datetime: %v", v.Value)
 			}
-			rec[key] = CreationTimeField(mtime)
+			fields[key] = CreationTimeField(mtime)
 		case FT_SUBTABLE:
 			b2, err := json.Marshal(v.Value)
 			if err != nil {
@@ -180,7 +217,13 @@ func decodeRecordData(data recordData) (Record, error) {
 			if err != nil {
 				return nil, err
 			}
-			rec[key] = SubTableField(stl)
+			fields[key] = SubTableField(stl)
+		case FT_REVISION:
+			revision, err := strconv.ParseInt(v.Value.(string), 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("Invalid revision number: %v", v.Value)
+			}
+			rec.revision = revision
 		default:
 			return nil, fmt.Errorf("Invalid type: %v", v.Type)
 		}
@@ -189,7 +232,7 @@ func decodeRecordData(data recordData) (Record, error) {
 }
 
 // DecodeRecords decodes JSON response for multi-get API.
-func DecodeRecords(b []byte) ([]Record, error) {
+func DecodeRecords(b []byte) ([]*Record, error) {
 	var t struct {
 		Records []recordData `json:"records"`
 	}
@@ -197,7 +240,7 @@ func DecodeRecords(b []byte) ([]Record, error) {
 	if err != nil {
 		return nil, errors.New("Invalid JSON format")
 	}
-	rec_list := make([]Record, len(t.Records))
+	rec_list := make([]*Record, len(t.Records))
 	for i, rd := range t.Records {
 		r, err := decodeRecordData(rd)
 		if err != nil {
@@ -209,7 +252,7 @@ func DecodeRecords(b []byte) ([]Record, error) {
 }
 
 // DecodeRecord decodes JSON response for single-get API.
-func DecodeRecord(b []byte) (Record, error) {
+func DecodeRecord(b []byte) (*Record, error) {
 	var t struct {
 		RecordData recordData `json:"record"`
 	}

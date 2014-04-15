@@ -189,7 +189,7 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 }
 
 // GetRecord fetches a record.
-func (app *App) GetRecord(id uint64) (Record, error) {
+func (app *App) GetRecord(id uint64) (*Record, error) {
 	type request_body struct {
 		App uint64 `json:"app,string"`
 		Id  uint64 `json:"id,string"`
@@ -223,7 +223,7 @@ func (app *App) GetRecord(id uint64) (Record, error) {
 //
 // If fields is nil, all fields are retrieved.
 // See API specs how to construct query strings.
-func (app *App) GetRecords(fields []string, query string) ([]Record, error) {
+func (app *App) GetRecords(fields []string, query string) ([]*Record, error) {
 	type request_body struct {
 		App    uint64   `json:"app,string"`
 		Fields []string `json:"fields"`
@@ -252,8 +252,8 @@ func (app *App) GetRecords(fields []string, query string) ([]Record, error) {
 // GetAllRecords fetches all records.
 //
 // If fields is nil, all fields are retrieved.
-func (app *App) GetAllRecords(fields []string) ([]Record, error) {
-	recs := make([]Record, 0, 100)
+func (app *App) GetAllRecords(fields []string) ([]*Record, error) {
+	recs := make([]*Record, 0, 100)
 	type request_body struct {
 		App    uint64   `json:"app,string"`
 		Fields []string `json:"fields"`
@@ -401,10 +401,10 @@ func (app *App) Upload(fileName, contentType string, data io.Reader) (key string
 // AddRecord adds a new record.
 //
 // If successful, the record ID of the new record is returned.
-func (app *App) AddRecord(rec Record) (id string, err error) {
+func (app *App) AddRecord(rec *Record) (id string, err error) {
 	type request_body struct {
-		App    uint64 `json:"app,string"`
-		Record Record `json:"record"`
+		App    uint64  `json:"app,string"`
+		Record *Record `json:"record"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, rec})
 	req, err := app.newRequest("POST", "record", bytes.NewReader(data))
@@ -435,14 +435,14 @@ func (app *App) AddRecord(rec Record) (id string, err error) {
 //
 // Up to 100 records can be added at once.
 // If successful, a list of record IDs is returned.
-func (app *App) AddRecords(recs []Record) ([]string, error) {
+func (app *App) AddRecords(recs []*Record) ([]string, error) {
 	if len(recs) > 100 {
 		return nil, ErrTooMany
 	}
 
 	type request_body struct {
-		App     uint64   `json:"app,string"`
-		Records []Record `json:"records"`
+		App     uint64    `json:"app,string"`
+		Records []*Record `json:"records"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, recs})
 	req, err := app.newRequest("POST", "records", bytes.NewReader(data))
@@ -468,13 +468,22 @@ func (app *App) AddRecords(recs []Record) ([]string, error) {
 }
 
 // UpdateRecord edits a record.
-func (app *App) UpdateRecord(id uint64, rec Record) error {
+//
+// If ignoreRevision is true, the record will always be updated despite
+// the revision number.  Else, the record may not be updated when the
+// same record was updated by another client.
+func (app *App) UpdateRecord(rec *Record, ignoreRevision bool) error {
 	type request_body struct {
-		App    uint64 `json:"app,string"`
-		Id     uint64 `json:"id,string"`
-		Record Record `json:"record"`
+		App      uint64  `json:"app,string"`
+		Id       uint64  `json:"id,string"`
+		Revision int64   `json:"revision,string"`
+		Record   *Record `json:"record"`
 	}
-	data, _ := json.Marshal(request_body{app.AppId, id, rec})
+	rev := rec.Revision()
+	if ignoreRevision {
+		rev = -1
+	}
+	data, _ := json.Marshal(request_body{app.AppId, rec.id, rev, rec})
 	req, err := app.newRequest("PUT", "record", bytes.NewReader(data))
 	if err != nil {
 		return err
@@ -487,26 +496,31 @@ func (app *App) UpdateRecord(id uint64, rec Record) error {
 	return err
 }
 
-// UpdateRecords edits multiple records.
+// UpdateRecords edits multiple records at once.
 //
-// "recs" is a mapping between record IDs and Record data.
-// Up to 100 records can be edited at once.
-func (app *App) UpdateRecords(recs map[uint64]Record) error {
+// Up to 100 records can be edited at once.  ignoreRevision works the
+// same as UpdateRecord method.
+func (app *App) UpdateRecords(recs []*Record, ignoreRevision bool) error {
 	if len(recs) > 100 {
 		return ErrTooMany
 	}
 
 	type update_t struct {
-		Id     uint64 `json:"id,string"`
-		Record Record `json:"record"`
+		Id       uint64  `json:"id,string"`
+		Revision int64   `json:"revision,string"`
+		Record   *Record `json:"record"`
 	}
 	type request_body struct {
 		App     uint64     `json:"app,string"`
 		Records []update_t `json:"records"`
 	}
 	t_recs := make([]update_t, 0, len(recs))
-	for id, rec := range recs {
-		t_recs = append(t_recs, update_t{id, rec})
+	for _, rec := range recs {
+		rev := rec.Revision()
+		if ignoreRevision {
+			rev = -1
+		}
+		t_recs = append(t_recs, update_t{rec.Id(), rev, rec})
 	}
 	data, _ := json.Marshal(request_body{app.AppId, t_recs})
 	req, err := app.newRequest("PUT", "records", bytes.NewReader(data))
