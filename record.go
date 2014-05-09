@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -231,7 +232,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 			}
 			rec.revision = revision
 		default:
-			return nil, fmt.Errorf("Invalid type: %v", v.Type)
+			log.Printf("Unknown type: %v", v.Type)
 		}
 	}
 	return rec, nil
