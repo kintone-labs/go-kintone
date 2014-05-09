@@ -30,12 +30,13 @@ const (
 	FT_CATEGORY         = "CATEGORY"
 	FT_STATUS           = "STATUS"
 	FT_ASSIGNEE         = "STATUS_ASSIGNEE"
-	FT_ID               = "RECORD_NUMBER"
+	FT_RECNUM           = "RECORD_NUMBER"
 	FT_CREATOR          = "CREATOR"
 	FT_CTIME            = "CREATED_TIME"
 	FT_MODIFIER         = "MODIFIER"
 	FT_MTIME            = "UPDATED_TIME"
 	FT_SUBTABLE         = "SUBTABLE"
+	FT_ID               = "__ID__"
 	FT_REVISION         = "__REVISION__"
 )
 
@@ -300,7 +301,7 @@ type RecordNumberField string
 
 func (f RecordNumberField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"type":  FT_ID,
+		"type":  FT_RECNUM,
 		"value": string(f),
 	})
 }

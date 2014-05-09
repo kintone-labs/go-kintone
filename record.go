@@ -176,7 +176,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				return nil, err
 			}
 			fields[key] = AssigneeField(al)
-		case FT_ID:
+		case FT_RECNUM:
 			if nid, err := numericId(v.Value.(string)); err != nil {
 				return nil, err
 			} else {
@@ -218,6 +218,12 @@ func decodeRecordData(data recordData) (*Record, error) {
 				return nil, err
 			}
 			fields[key] = SubTableField(stl)
+		case FT_ID:
+			id, err := strconv.ParseUint(v.Value.(string), 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("Invalid record ID: %v", v.Value)
+			}
+			rec.id = id
 		case FT_REVISION:
 			revision, err := strconv.ParseInt(v.Value.(string), 10, 64)
 			if err != nil {
