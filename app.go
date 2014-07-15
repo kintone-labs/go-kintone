@@ -54,6 +54,7 @@ func (e *AppError) Error() string {
 // App provides kintone application API client.
 //
 // You need to provide Domain, User, Password, and AppId.
+// You can also use the api token instead of user/password.
 // When using Google AppEngine, you must supply Client too.
 //
 //	import (
@@ -78,6 +79,7 @@ type App struct {
 	AppId             uint64        // application ID.
 	Client            *http.Client  // Specialized client.
 	Timeout           time.Duration // Timeout for API responses.
+	ApiToken          string        // API token.
 	token             string        // auth token.
 	basicAuth         bool          // true to use Basic Authentication.
 	basicAuthUser     string        // User name for Basic Authentication.
@@ -109,7 +111,11 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 	if app.basicAuth {
 		req.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
 	}
-	req.Header.Set("X-Cybozu-Authorization", app.token)
+	if len(app.ApiToken) == 0 {
+		req.Header.Set("X-Cybozu-Authorization", app.token)
+	} else {
+		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
+	}
 	req.Header.Set("Content-Type", "application/json")
 	return req, nil
 }
