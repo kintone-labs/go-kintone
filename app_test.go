@@ -21,6 +21,14 @@ func newApp(appId uint64) *App {
 	}
 }
 
+func newAppWithApiToken(appId uint64) *App {
+	return &App{
+		Domain:   os.Getenv("KINTONE_DOMAIN"),
+		ApiToken: os.Getenv("KINTONE_API_TOKEN"),
+		AppId:    appId,
+	}
+}
+
 func TestGetRecord(t *testing.T) {
 	a := newApp(4799)
 	if len(a.Password) == 0 {
@@ -153,6 +161,21 @@ func TestFields(t *testing.T) {
 	fi, err := a.Fields()
 	if err != nil {
 		t.Error("Fields failed", err)
+	}
+	for _, f := range fi {
+		t.Log(f)
+	}
+}
+
+func TestApiToken(t *testing.T) {
+	a := newAppWithApiToken(9974)
+	if len(a.ApiToken) == 0 {
+		t.Skip()
+	}
+
+	fi, err := a.Fields()
+	if err != nil {
+		t.Error("Api token failed", err)
 	}
 	for _, f := range fi {
 		t.Log(f)
