@@ -108,7 +108,11 @@ func decodeRecordData(data recordData) (*Record, error) {
 		case FT_CHECK_BOX:
 			fields[key] = CheckBoxField(stringList(v.Value.([]interface{})))
 		case FT_RADIO:
-			fields[key] = RadioButtonField(v.Value.(string))
+			if v.Value == nil {
+				fields[key] = RadioButtonField("")
+			} else {
+				fields[key] = RadioButtonField(v.Value.(string))
+			}
 		case FT_SINGLE_SELECT:
 			if v.Value == nil {
 				fields[key] = SingleSelectField{Valid: false}
