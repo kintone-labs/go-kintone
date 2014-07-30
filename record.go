@@ -32,6 +32,13 @@ func NewRecord(fields map[string]interface{}) *Record {
 	return &Record{0, -1, fields}
 }
 
+// NewRecord creates using an existing record id.
+//
+// The revision number is initialized to -1.
+func NewRecordWithId(id uint64, fields map[string]interface{}) *Record {
+	return &Record{id, -1, fields}
+}
+
 // MarshalJSON marshals field data of a record into JSON.
 func (rec Record) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rec.Fields)
