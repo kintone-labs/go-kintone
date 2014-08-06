@@ -165,7 +165,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				fields[key] = TimeField{t, true}
 			}
 		case FT_DATETIME:
-			if len(v.Value) == 0 {
+			if v.Value == "" {
 				fields[key] = DateTimeField{Valid: false}
 			} else {
 				if s, ok := v.Value.(string); ok {
