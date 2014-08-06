@@ -142,7 +142,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 		case FT_LINK:
 			fields[key] = LinkField(v.Value.(string))
 		case FT_DATE:
-			if v.Value == nil || v.Value == "" {
+			if v.Value == nil {
 				fields[key] = DateField{Valid: false}
 			} else {
 				d, err := time.Parse("2006-01-02", v.Value.(string))
@@ -152,7 +152,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				fields[key] = DateField{d, true}
 			}
 		case FT_TIME:
-			if v.Value == nil || v.Value == "" {
+			if v.Value == nil {
 				fields[key] = TimeField{Valid: false}
 			} else {
 				t, err := time.Parse("15:04", v.Value.(string))
@@ -165,7 +165,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				fields[key] = TimeField{t, true}
 			}
 		case FT_DATETIME:
-			if v.Value == nil || v.Value == "" {
+			if len(v.Value) == 0 {
 				fields[key] = DateTimeField{Valid: false}
 			} else {
 				if s, ok := v.Value.(string); ok {
