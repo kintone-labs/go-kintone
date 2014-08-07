@@ -235,19 +235,31 @@ func (f TimeField) MarshalJSON() ([]byte, error) {
 }
 
 // DateTimeField is a field type for date & time.
-type DateTimeField time.Time
+type DateTimeField struct {
+	Time  time.Time // stores time information.
+	Valid bool      // false when not set.
+}
 
 // NewDateTimeField returns an instance of DateTimeField.
 func NewDateTimeField(year int, month time.Month, day, hour, min int) DateTimeField {
-	return DateTimeField(
-		time.Date(year, month, day, hour, min, 0, 0, time.UTC))
+	return DateTimeField{
+		time.Date(year, month, day, hour, min, 0, 0, time.UTC),
+		true,
+	}
 }
 
 func (f DateTimeField) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"type":  FT_DATETIME,
-		"value": time.Time(f).Format(time.RFC3339),
-	})
+	if f.Valid {
+		return json.Marshal(map[string]interface{}{
+			"type":  FT_DATETIME,
+			"value": f.Time.Format(time.RFC3339),
+		})
+	} else {
+		return json.Marshal(map[string]interface{}{
+			"type":  FT_DATETIME,
+			"value": nil,
+		})
+	}
 }
 
 // User represents a user entry.

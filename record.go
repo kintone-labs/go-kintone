@@ -32,6 +32,13 @@ func NewRecord(fields map[string]interface{}) *Record {
 	return &Record{0, -1, fields}
 }
 
+// NewRecord creates using an existing record id.
+//
+// The revision number is initialized to -1.
+func NewRecordWithId(id uint64, fields map[string]interface{}) *Record {
+	return &Record{id, -1, fields}
+}
+
 // MarshalJSON marshals field data of a record into JSON.
 func (rec Record) MarshalJSON() ([]byte, error) {
 	return json.Marshal(rec.Fields)
@@ -108,7 +115,11 @@ func decodeRecordData(data recordData) (*Record, error) {
 		case FT_CHECK_BOX:
 			fields[key] = CheckBoxField(stringList(v.Value.([]interface{})))
 		case FT_RADIO:
-			fields[key] = RadioButtonField(v.Value.(string))
+			if v.Value == nil {
+				fields[key] = RadioButtonField("")
+			} else {
+				fields[key] = RadioButtonField(v.Value.(string))
+			}
 		case FT_SINGLE_SELECT:
 			if v.Value == nil {
 				fields[key] = SingleSelectField{Valid: false}
@@ -154,12 +165,16 @@ func decodeRecordData(data recordData) (*Record, error) {
 				fields[key] = TimeField{t, true}
 			}
 		case FT_DATETIME:
-			if s, ok := v.Value.(string); ok {
-				dt, err := time.Parse(time.RFC3339, s)
-				if err != nil {
-					return nil, fmt.Errorf("Invalid datetime: %v", v.Value)
+			if v.Value == "" {
+				fields[key] = DateTimeField{Valid: false}
+			} else {
+				if s, ok := v.Value.(string); ok {
+					dt, err := time.Parse(time.RFC3339, s)
+					if err != nil {
+						return nil, fmt.Errorf("Invalid datetime: %v", v.Value)
+					}
+					fields[key] = DateTimeField{dt, true}
 				}
-				fields[key] = DateTimeField(dt)
 			}
 		case FT_USER:
 			ul, err := userList(v.Value.([]interface{}))
