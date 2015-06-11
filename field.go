@@ -365,12 +365,12 @@ type SubTableEntry struct {
 }
 
 // SubTableField is a list of subtable entries.
-type SubTableField []SubTableEntry
+type SubTableField []*Record
 
 func (f SubTableField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_SUBTABLE,
-		"value": []SubTableEntry(f),
+		"value": []*Record(f),
 	})
 }
 
