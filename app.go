@@ -585,6 +585,7 @@ type FieldInfo struct {
 	Separator   bool        `json:"digit"`             // true to use thousand separator
 	Medium      string      `json:"protocol"`          // "WEB", "CALL", or "MAIL"
 	Format      string      `json:"format"`            // "NUMBER", "NUMBER_DIGIT", "DATETIME", "DATE", "TIME", "HOUR_MINUTE", "DAY_HOUR_MINUTE"
+	Fields      []FieldInfo `json:"fields"`            // Field list of this subtable
 }
 
 // Work around code to handle "true"/"false" strings as booleans...
@@ -607,6 +608,7 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		Separator   string      `json:"digit"`
 		Medium      string      `json:"protocol"`
 		Format      string      `json:"format"`
+		Fields      []FieldInfo `json:"fields"`
 	}
 	err := json.Unmarshal(data, &t)
 	if err != nil {
@@ -620,7 +622,7 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		t.MaxValue, t.MinValue, t.MaxLength, t.MinLength,
 		t.Default, t.DefaultTime, t.Options, t.Expression,
 		(t.Separator == "true"),
-		t.Medium, t.Format}
+		t.Medium, t.Format, t.Fields}
 	return nil
 }
 

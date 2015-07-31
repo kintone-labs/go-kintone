@@ -233,7 +233,24 @@ func decodeRecordData(data recordData) (*Record, error) {
 			if err != nil {
 				return nil, err
 			}
-			fields[key] = SubTableField(stl)
+			ra := make([]*Record, len(stl))
+			for i, sr := range stl {
+				b3, err := json.Marshal(sr.Value)
+				if err != nil {
+					return nil, err
+				}
+				var rd recordData
+				err = json.Unmarshal(b3, &rd)
+				if err != nil {
+					return nil, err
+				}
+				r, err := decodeRecordData(recordData(rd))
+				if err != nil {
+					return nil, err
+				}
+				ra[i] = r
+			}
+			fields[key] = SubTableField(ra)
 		case FT_ID:
 			id, err := strconv.ParseUint(v.Value.(string), 10, 64)
 			if err != nil {
