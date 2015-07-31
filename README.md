@@ -28,7 +28,7 @@ Usage
 
 To import this package:
 
-    import "github.com/cybozu/go-kintone"
+    import "github.com/kintone/go-kintone"
 
 Visit the docs on [godoc.org][godoc].
 
@@ -36,4 +36,4 @@ Visit the docs on [godoc.org][godoc].
 [APIen]: http://developers.kintone.com/
 [APIja]: https://developers.cybozu.com/
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
-[godoc]: http://godoc.org/github.com/cybozu/go-kintone
+[godoc]: http://godoc.org/github.com/kintone/go-kintone
