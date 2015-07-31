@@ -6,8 +6,9 @@ See http://developers.kintone.com/ for API specs.
 To retrieve 3 records from a kintone app (id=25):
 
 	import (
-		"github.com/cybozu/go-kintone"
 		"log"
+
+		"github.com/kintone/go-kintone"
 	)
 	...
 	app := &kintone.App{
