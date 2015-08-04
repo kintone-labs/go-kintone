@@ -32,8 +32,8 @@ To import this package:
 
 Visit the docs on [godoc.org][godoc].
 
-[kintone]: https://kintone.cybozu.com/us/
-[APIen]: http://developers.kintone.com/
-[APIja]: https://developers.cybozu.com/
+[kintone]: https://www.kintone.com/
+[APIen]: https://developer.kintone.io/hc/en-us
+[APIja]: https://cybozudev.zendesk.com/hc/ja
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
 [godoc]: http://godoc.org/github.com/kintone/go-kintone
