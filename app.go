@@ -60,7 +60,7 @@ func (e *AppError) Error() string {
 //	import (
 //		"appengine"
 //		"appengine/urlfetch"
-//		"github.com/cybozu/go-kintone"
+//		"github.com/kintone/go-kintone"
 //		"http"
 //	)
 //
