@@ -369,13 +369,13 @@ type SubTableField []*Record
 
 func (f SubTableField) MarshalJSON() ([]byte, error) {
 	type sub_record struct {
-		Record   *Record `json:"value"`
+		Record *Record `json:"value"`
 	}
 	recs := make([]sub_record, 0, len(f))
 	for _, rec := range f {
 		recs = append(recs, sub_record{rec})
 	}
-	return json.Marshal(map[string]interface{} {
+	return json.Marshal(map[string]interface{}{
 		"type":  FT_SUBTABLE,
 		"value": recs,
 	})
