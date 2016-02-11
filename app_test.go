@@ -29,6 +29,16 @@ func newAppWithApiToken(appId uint64) *App {
 	}
 }
 
+func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
+	return &App{
+		Domain:   os.Getenv("KINTONE_DOMAIN"),
+		User:     os.Getenv("KINTONE_USER"),
+		Password: os.Getenv("KINTONE_PASSWORD"),
+		AppId:    appId,
+		GuestSpaceId: guestSpaceId,
+	}
+}
+
 func TestGetRecord(t *testing.T) {
 	a := newApp(4799)
 	if len(a.Password) == 0 {
@@ -173,11 +183,20 @@ func TestApiToken(t *testing.T) {
 		t.Skip()
 	}
 
-	fi, err := a.Fields()
+	_, err := a.Fields()
 	if err != nil {
 		t.Error("Api token failed", err)
 	}
-	for _, f := range fi {
-		t.Log(f)
+}
+
+func TestGuestSpace(t *testing.T) {
+	a := newAppInGuestSpace(185, 9)
+	if len(a.Password) == 0 {
+		t.Skip()
+	}
+
+	_, err := a.Fields()
+	if err != nil {
+		t.Error("GuestSpace failed", err)
 	}
 }
