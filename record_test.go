@@ -245,10 +245,10 @@ func TestDecodeRecord(t *testing.T) {
 	if !ok {
 		t.Error("Not a DateTimeField")
 	}
-	if time.Time(dt).Hour() != 11 {
+	if dt.Time.Hour() != 11 {
 		t.Error("Hour != 11")
 	}
-	if time.Time(dt).Minute() != 30 {
+	if dt.Time.Minute() != 30 {
 		t.Error("Minute != 30")
 	}
 	user, ok := fields["user"].(UserField)

@@ -80,6 +80,7 @@ type App struct {
 	Client            *http.Client  // Specialized client.
 	Timeout           time.Duration // Timeout for API responses.
 	ApiToken          string        // API token.
+	GuestSpaceId      uint64        // guest space ID.
 	token             string        // auth token.
 	basicAuth         bool          // true to use Basic Authentication.
 	basicAuthUser     string        // User name for Basic Authentication.
@@ -99,10 +100,18 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 		app.token = base64.StdEncoding.EncodeToString(
 			[]byte(app.User + ":" + app.Password))
 	}
+
+	var path string
+	if app.GuestSpaceId == 0 {
+		path = fmt.Sprintf("/k/v1/%s.json", api)
+	} else {
+		path = fmt.Sprintf("/k/guest/%d/v1/%s.json", app.GuestSpaceId, api)
+	}
+
 	u := url.URL{
 		Scheme: "https",
 		Host:   app.Domain,
-		Path:   "/k/v1/" + api + ".json",
+		Path:   path,
 	}
 	req, err := http.NewRequest(method, u.String(), body)
 	if err != nil {
