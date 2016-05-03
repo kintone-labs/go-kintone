@@ -138,6 +138,10 @@ func TestUpdateRecord(t *testing.T) {
 		t.Error("UpdateRecord failed", err)
 	}
 
+	if err := a.UpdateRecordByKey(rec, true, "key"); err != nil {
+		t.Error("UpdateRecordByKey failed", err)
+	}
+
 	recs, err := a.GetRecords(nil, "limit 3")
 	if err != nil {
 		t.Fatal(err)
@@ -147,6 +151,10 @@ func TestUpdateRecord(t *testing.T) {
 	}
 	if err := a.UpdateRecords(recs, true); err != nil {
 		t.Error("UpdateRecords failed", err)
+	}
+
+	if err := a.UpdateRecordsByKey(recs, true, "key"); err != nil {
+		t.Error("UpdateRecordsByKey failed", err)
 	}
 }
 

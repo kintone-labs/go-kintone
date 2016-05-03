@@ -537,7 +537,15 @@ func (app *App) UpdateRecordByKey(rec *Record, ignoreRevision bool, keyField str
 	if ignoreRevision {
 		rev = -1
 	}
-	data, _ := json.Marshal(request_body{app.AppId, UpdateKey{keyField,  rec.Fields[keyField].(UpdateKeyField)}, rev, rec})
+	updateKey := rec.Fields[keyField]
+	_rec := *rec
+	_rec.Fields = make(map[string]interface{})
+	for k,v := range rec.Fields {
+		if k != keyField {
+			_rec.Fields[k] = v
+		}
+	}
+	data, _ := json.Marshal(request_body{app.AppId, UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
 
 	req, err := app.newRequest("PUT", "record", bytes.NewReader(data))
 	if err != nil {
@@ -611,7 +619,15 @@ func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField
 		if ignoreRevision {
 			rev = -1
 		}
-		t_recs = append(t_recs, update_t{UpdateKey{keyField, rec.Fields[keyField].(UpdateKeyField)}, rev, rec})
+		updateKey := rec.Fields[keyField]
+		_rec := *rec
+		_rec.Fields = make(map[string]interface{})
+		for k,v := range rec.Fields {
+			if k != keyField {
+		  	_rec.Fields[k] = v
+			}
+		}
+		t_recs = append(t_recs, update_t{UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
 	}
 	data, _ := json.Marshal(request_body{app.AppId, t_recs})
 	req, err := app.newRequest("PUT", "records", bytes.NewReader(data))
