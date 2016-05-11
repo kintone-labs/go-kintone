@@ -525,7 +525,7 @@ func (app *App) UpdateRecord(rec *Record, ignoreRevision bool) error {
 	return err
 }
 
-// UpdateRecord edits a record by specified key field.
+// UpdateRecordByKey edits a record by specified key field.
 func (app *App) UpdateRecordByKey(rec *Record, ignoreRevision bool, keyField string) error {
 	type request_body struct {
 		App       uint64    `json:"app,string"`
@@ -598,7 +598,7 @@ func (app *App) UpdateRecords(recs []*Record, ignoreRevision bool) error {
 	return err
 }
 
-// UpdateRecords edits multiple records by specified key fields at once.
+// UpdateRecordsByKey edits multiple records by specified key fields at once.
 func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField string) error {
 	if len(recs) > 100 {
 		return ErrTooMany
