@@ -51,6 +51,20 @@ func (e *AppError) Error() string {
 		e.HttpStatusCode, e.Code, e.Message, e.Id)
 }
 
+type UpdateKeyField interface {
+	JSONValue() interface{}
+}
+type UpdateKey struct {
+	FieldCode  string
+	Field      UpdateKeyField
+}
+func (f UpdateKey) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"field":  f.FieldCode,
+		"value": f.Field.JSONValue(),
+	})
+}
+
 // App provides kintone application API client.
 //
 // You need to provide Domain, User, Password, and AppId.
@@ -511,6 +525,40 @@ func (app *App) UpdateRecord(rec *Record, ignoreRevision bool) error {
 	return err
 }
 
+// UpdateRecordByKey edits a record by specified key field.
+func (app *App) UpdateRecordByKey(rec *Record, ignoreRevision bool, keyField string) error {
+	type request_body struct {
+		App       uint64    `json:"app,string"`
+		UpdateKey UpdateKey `json:"updateKey"`
+		Revision  int64     `json:"revision,string"`
+		Record    *Record   `json:"record"`
+	}
+	rev := rec.Revision()
+	if ignoreRevision {
+		rev = -1
+	}
+	updateKey := rec.Fields[keyField]
+	_rec := *rec
+	_rec.Fields = make(map[string]interface{})
+	for k,v := range rec.Fields {
+		if k != keyField {
+			_rec.Fields[k] = v
+		}
+	}
+	data, _ := json.Marshal(request_body{app.AppId, UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
+
+	req, err := app.newRequest("PUT", "record", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return err
+	}
+	_, err = parseResponse(resp)
+	return err
+}
+
 // UpdateRecords edits multiple records at once.
 //
 // Up to 100 records can be edited at once.  ignoreRevision works the
@@ -536,6 +584,50 @@ func (app *App) UpdateRecords(recs []*Record, ignoreRevision bool) error {
 			rev = -1
 		}
 		t_recs = append(t_recs, update_t{rec.Id(), rev, rec})
+	}
+	data, _ := json.Marshal(request_body{app.AppId, t_recs})
+	req, err := app.newRequest("PUT", "records", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return err
+	}
+	_, err = parseResponse(resp)
+	return err
+}
+
+// UpdateRecordsByKey edits multiple records by specified key fields at once.
+func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField string) error {
+	if len(recs) > 100 {
+		return ErrTooMany
+	}
+
+	type update_t struct {
+		UpdateKey UpdateKey `json:"updateKey"`
+		Revision  int64       `json:"revision,string"`
+		Record    *Record     `json:"record"`
+	}
+	type request_body struct {
+		App     uint64     `json:"app,string"`
+		Records []update_t `json:"records"`
+	}
+	t_recs := make([]update_t, 0, len(recs))
+	for _, rec := range recs {
+		rev := rec.Revision()
+		if ignoreRevision {
+			rev = -1
+		}
+		updateKey := rec.Fields[keyField]
+		_rec := *rec
+		_rec.Fields = make(map[string]interface{})
+		for k,v := range rec.Fields {
+			if k != keyField {
+		  	_rec.Fields[k] = v
+			}
+		}
+		t_recs = append(t_recs, update_t{UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
 	}
 	data, _ := json.Marshal(request_body{app.AppId, t_recs})
 	req, err := app.newRequest("PUT", "records", bytes.NewReader(data))
