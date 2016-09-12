@@ -438,6 +438,92 @@ func TestUserField(t *testing.T) {
 	}
 }
 
+func TestOrganizationField(t *testing.T) {
+	t.Parallel()
+
+	var s OrganizationField = []Organization{
+		{"sales", "Sales Dept"},
+	}
+	j, err := json.Marshal(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]interface{}
+	err = json.Unmarshal(j, &m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := m["type"]; !ok {
+		t.Error("Invalid marshal data!")
+	}
+	if m["type"] != "ORGANIZATION_SELECT" {
+		t.Error("Invalid type")
+	}
+	organizations := m["value"].([]interface{})
+	if len(organizations) != 1 {
+		t.Error("Wrong value length")
+	}
+	o1, ok := organizations[0].(map[string]interface{})
+	if !ok {
+		t.Fatal("Invalid Organization data")
+	}
+	if _, ok := o1["code"]; !ok {
+		t.Error("No code")
+	}
+	if o1["code"] != "sales" {
+		t.Error("Invalid code")
+	}
+	if _, ok := o1["name"]; !ok {
+		t.Error("No name")
+	}
+	if o1["name"] != "Sales Dept" {
+		t.Error("Wrong name")
+	}
+}
+
+func TestGroupField(t *testing.T) {
+	t.Parallel()
+
+	var s GroupField = []Group{
+		{"managers", "Manager Group"},
+	}
+	j, err := json.Marshal(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]interface{}
+	err = json.Unmarshal(j, &m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := m["type"]; !ok {
+		t.Error("Invalid marshal data!")
+	}
+	if m["type"] != "GROUP_SELECT" {
+		t.Error("Invalid type")
+	}
+	groups := m["value"].([]interface{})
+	if len(groups) != 1 {
+		t.Error("Wrong value length")
+	}
+	g1, ok := groups[0].(map[string]interface{})
+	if !ok {
+		t.Fatal("Invalid Organization data")
+	}
+	if _, ok := g1["code"]; !ok {
+		t.Error("No code")
+	}
+	if g1["code"] != "managers" {
+		t.Error("Invalid code")
+	}
+	if _, ok := g1["name"]; !ok {
+		t.Error("No name")
+	}
+	if g1["name"] != "Manager Group" {
+		t.Error("Wrong name")
+	}
+}
+
 func TestCategoryField(t *testing.T) {
 	t.Parallel()
 
