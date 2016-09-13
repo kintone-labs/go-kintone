@@ -99,11 +99,29 @@ func TestDecodeRecord(t *testing.T) {
         "user": {
             "type": "USER_SELECT",
             "value": [
-    {
-        "code": "sato",
-        "name": "Noboru Sato"
-     }
-]
+              {
+                "code": "sato",
+                "name": "Noboru Sato"
+              }
+            ]
+        },
+        "org": {
+            "type": "ORGANIZATION_SELECT",
+            "value": [
+              {
+                "code": "sales",
+                "name": "Sales Dept"
+              }
+            ]
+        },
+        "group": {
+            "type": "GROUP_SELECT",
+            "value": [
+              {
+                "code": "managers",
+                "name": "Manager Group"
+              }
+            ]
         },
         "$revision": {
             "type": "__REVISION__",
@@ -260,6 +278,26 @@ func TestDecodeRecord(t *testing.T) {
 	}
 	if user[0].Name != "Noboru Sato" {
 		t.Error("user name mismatch")
+	}
+	org, ok := fields["org"].(OrganizationField)
+	if !ok {
+		t.Error("Not a OrganizationField")
+	}
+	if org[0].Code != "sales" {
+		t.Error("organization code mismatch")
+	}
+	if org[0].Name != "Sales Dept" {
+		t.Error("organization name mismatch")
+	}
+	group, ok := fields["group"].(GroupField)
+	if !ok {
+		t.Error("Not a GroupField")
+	}
+	if group[0].Code != "managers" {
+		t.Error("group code mismatch")
+	}
+	if group[0].Name != "Manager Group" {
+		t.Error("group name mismatch")
 	}
 }
 

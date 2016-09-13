@@ -27,6 +27,8 @@ const (
 	FT_TIME             = "TIME"
 	FT_DATETIME         = "DATETIME"
 	FT_USER             = "USER_SELECT"
+	FT_ORGANIZATION     = "ORGANIZATION_SELECT"
+	FT_GROUP            = "GROUP_SELECT"
 	FT_CATEGORY         = "CATEGORY"
 	FT_STATUS           = "STATUS"
 	FT_ASSIGNEE         = "STATUS_ASSIGNEE"
@@ -291,6 +293,42 @@ func (f UserField) JSONValue() (interface{}) {
 func (f UserField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_USER,
+		"value": f.JSONValue(),
+	})
+}
+
+// Organization represents a department entry.
+type Organization struct {
+	Code string `json:"code"` // A unique identifer of the department.
+	Name string `json:"name"` // The department name.
+}
+
+// OrganizationField is a field type for department entries.
+type OrganizationField []Organization
+func (f OrganizationField) JSONValue() (interface{}) {
+	return []Organization(f);
+}
+func (f OrganizationField) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type":  FT_ORGANIZATION,
+		"value": f.JSONValue(),
+	})
+}
+
+// Group represents a group(or role) entry.
+type Group struct {
+	Code string `json:"code"` // A unique identifer of the group(or role).
+	Name string `json:"name"` // The group name.
+}
+
+// GroupField is a field type for group(or role) entries.
+type GroupField []Group
+func (f GroupField) JSONValue() (interface{}) {
+	return []Group(f);
+}
+func (f GroupField) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]interface{}{
+		"type":  FT_GROUP,
 		"value": f.JSONValue(),
 	})
 }

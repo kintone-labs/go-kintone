@@ -79,6 +79,34 @@ func userList(l []interface{}) ([]User, error) {
 	return ul, nil
 }
 
+// Convert organization list.
+func organizationList(l []interface{}) ([]Organization, error) {
+	b, err := json.Marshal(l)
+	if err != nil {
+		return nil, err
+	}
+	var ol []Organization
+	err = json.Unmarshal(b, &ol)
+	if err != nil {
+		return nil, err
+	}
+	return ol, nil
+}
+
+// Convert group list.
+func groupList(l []interface{}) ([]Group, error) {
+	b, err := json.Marshal(l)
+	if err != nil {
+		return nil, err
+	}
+	var gl []Group
+	err = json.Unmarshal(b, &gl)
+	if err != nil {
+		return nil, err
+	}
+	return gl, nil
+}
+
 // Convert string "record number" into an integer.
 func numericId(id string) (uint64, error) {
 	n := strings.LastIndex(id, "-")
@@ -182,6 +210,18 @@ func decodeRecordData(data recordData) (*Record, error) {
 				return nil, err
 			}
 			fields[key] = UserField(ul)
+		case FT_ORGANIZATION:
+			ol, err := organizationList(v.Value.([]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			fields[key] = OrganizationField(ol)
+		case FT_GROUP:
+			gl, err := groupList(v.Value.([]interface{}))
+			if err != nil {
+				return nil, err
+			}
+			fields[key] = GroupField(gl)
 		case FT_CATEGORY:
 			fields[key] = CategoryField(stringList(v.Value.([]interface{})))
 		case FT_STATUS:
