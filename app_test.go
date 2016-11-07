@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	"fmt"
 )
 
 func newApp(appId uint64) *App {
@@ -207,4 +208,19 @@ func TestGuestSpace(t *testing.T) {
 	if err != nil {
 		t.Error("GuestSpace failed", err)
 	}
+}
+
+func TestGetRecordComments(t *testing.T) {
+
+	a := newApp(68)
+	fmt.Println(os.Getenv("KINTONE_DOMAIN"))
+	if rec, err := a.GetRecordComments(38); err != nil {
+		t.Error(err)
+	} else {
+		if len(rec) != 2 {
+			t.Errorf("record count mismatch. actual %v", len(rec))
+		}
+	}
+
+
 }

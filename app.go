@@ -667,6 +667,34 @@ func (app *App) DeleteRecords(ids []uint64) error {
 	return err
 }
 
+// GetRecordComments
+func (app *App) GetRecordComments(recordId uint64) ([]Comment, error) {
+	type requestBody struct {
+		App	uint64	`json:"app"`
+		Record	uint64	`json:"record"`
+	}
+	data, _ := json.Marshal(requestBody{app.AppId, recordId})
+	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return nil, ErrInvalidResponse
+	}
+	recs, err := DecodeRecordComments(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return recs, nil
+}
+
+
 // FieldInfo is the meta data structure of a field.
 type FieldInfo struct {
 	Label       string      `json:"label"`             // Label string
