@@ -9,8 +9,8 @@ type Comment struct {
 	Id   string `json:"id"`
 	Text string `json:"text"`
 	CreatedAt string `json:"createdAt"`
-	//Creator map[string]interface{} `json:"creator"`
-	//Mentions []interface{} `json:"mentions"`
+	Creator map[string]interface{} `json:"creator"`
+	Mentions []interface{} `json:"mentions"`
 }
 
 // DecodeRecordComments decodes JSON response for comment api

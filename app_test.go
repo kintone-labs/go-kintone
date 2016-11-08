@@ -10,7 +10,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"fmt"
+	"strings"
 )
 
 func newApp(appId uint64) *App {
@@ -211,16 +211,23 @@ func TestGuestSpace(t *testing.T) {
 }
 
 func TestGetRecordComments(t *testing.T) {
-
 	a := newApp(68)
-	fmt.Println(os.Getenv("KINTONE_DOMAIN"))
 	if rec, err := a.GetRecordComments(38); err != nil {
 		t.Error(err)
 	} else {
-		if len(rec) != 2 {
-			t.Errorf("record count mismatch. actual %v", len(rec))
+		if !strings.Contains(rec[0].Text, "テストコメント") {
+			t.Errorf("comment mismatch. expected is テストコメント but actual %v", rec[0].Text)
 		}
 	}
+}
 
-
+func TestAddRecordComment(t *testing.T) {
+	a := newApp(68)
+	var com Comment = Comment{ Text: "テストコメント" }
+	ret, err := a.AddRecordComment(38, &com)
+	if err != nil {
+		error.Error(err)
+	} else {
+		t.Logf("return value(comment-id) is %v", ret)
+	}
 }
