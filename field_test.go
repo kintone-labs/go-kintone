@@ -720,6 +720,12 @@ func TestSubTableField(t *testing.T) {
 	s := []SubTableEntry{
 		{Id: "123", Value: map[string]interface{}{
 			"abc": RecordNumberField("12345")}}}
+	if len(s) != 1 {
+		t.Error("Invalid size")
+	}
+	if s[0].Id != "123" {
+		t.Error("Wrong id")
+	}
 	t.Log(s)
 }
 

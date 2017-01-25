@@ -441,9 +441,17 @@ func (f SubTableField) JSONValue() (interface{}) {
 	type sub_record struct {
 		Record *Record `json:"value"`
 	}
-	recs := make([]sub_record, 0, len(f))
+	type sub_record_with_id struct {
+		Id    uint64   `json:"id,string"`
+		Record *Record `json:"value"`
+	}
+	recs := make([]interface{}, 0, len(f))
 	for _, rec := range f {
-		recs = append(recs, sub_record{rec})
+		if (rec.id == 0) {
+			recs = append(recs, sub_record{rec})
+		} else {
+			recs = append(recs, sub_record_with_id{rec.id, rec})
+		}
 	}
 	return recs;
 }

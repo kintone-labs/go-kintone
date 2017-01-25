@@ -288,6 +288,11 @@ func decodeRecordData(data recordData) (*Record, error) {
 				if err != nil {
 					return nil, err
 				}
+				id, err := strconv.ParseUint(sr.Id, 10, 64)
+				if err != nil {
+					return nil, err
+				}
+				r.id = id
 				ra[i] = r
 			}
 			fields[key] = SubTableField(ra)
