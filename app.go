@@ -667,6 +667,68 @@ func (app *App) DeleteRecords(ids []uint64) error {
 	return err
 }
 
+// GetRecordComments get comment list by record ID.
+//
+// It returns comment array.
+func (app *App) GetRecordComments(recordId uint64) ([]Comment, error) {
+	type requestBody struct {
+		App	uint64	`json:"app"`
+		Record	uint64	`json:"record"`
+	}
+	data, _ := json.Marshal(requestBody{app.AppId, recordId})
+	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return nil, ErrInvalidResponse
+	}
+	recs, err := DecodeRecordComments(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return recs, nil
+}
+
+// AddRecordComments post some comments by record ID.
+//
+// If successful, it returns the target record ID.
+func (app *App) AddRecordComment(recordId uint64, comment *Comment) (id string, err error) {
+	type requestBody struct {
+		App    uint64    `json:"app,string"`
+		Record uint64	 `json:"record,string"`
+		Comment	*Comment `json:"comment"`
+	}
+	data, _ := json.Marshal(requestBody{app.AppId, recordId, comment})
+	req, err := app.newRequest("POST", "record/comment", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return
+	}
+	var t struct {
+		Id string `json:"id"`
+	}
+	if json.Unmarshal(body, &t) != nil {
+		err = ErrInvalidResponse
+		return
+	}
+	id = t.Id
+	return
+}
+
 // FieldInfo is the meta data structure of a field.
 type FieldInfo struct {
 	Label       string      `json:"label"`             // Label string

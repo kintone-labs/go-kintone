@@ -10,6 +10,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	"strings"
 )
 
 func newApp(appId uint64) *App {
@@ -206,5 +207,27 @@ func TestGuestSpace(t *testing.T) {
 	_, err := a.Fields()
 	if err != nil {
 		t.Error("GuestSpace failed", err)
+	}
+}
+
+func TestGetRecordComments(t *testing.T) {
+	a := newApp(68)
+	if rec, err := a.GetRecordComments(38); err != nil {
+		t.Error(err)
+	} else {
+		if !strings.Contains(rec[0].Text, "テストコメント") {
+			t.Errorf("comment mismatch. expected is テストコメント but actual %v", rec[0].Text)
+		}
+	}
+}
+
+func TestAddRecordComment(t *testing.T) {
+	a := newApp(68)
+	var com Comment = Comment{ Text: "テストコメント" }
+	ret, err := a.AddRecordComment(38, &com)
+	if err != nil {
+		error.Error(err)
+	} else {
+		t.Logf("return value(comment-id) is %v", ret)
 	}
 }
