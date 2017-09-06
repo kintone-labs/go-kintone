@@ -33,16 +33,18 @@ To retrieve comments in record (id=3) from a kintone app (id=25)
 To add comments into record (id=3) from a kintone app (id=25)
 	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: kintone.ConstCommentMentionTypeUser}
 	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: kintone.ConstCommentMentionTypeGroup}
+	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
+
 	var cmt Comment
 	cmt.Text = "Test comment 222"
-	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu}
+	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
 	cmtID, err := app.AddRecordComment(3, &cmt)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// use comments id
 
-	To remove comments (id=12) in the record (id=3) from a kintone app (id=25)
+To remove comments (id=12) in the record (id=3) from a kintone app (id=25)
 	err := app.DeleteComment(3, 12)
 
 	if err != nil {
