@@ -16,33 +16,35 @@ See http://developers.kintone.com/ for API specs.
 		25,
 	}
 
-	To retrieve 3 records from a kintone app (id=25):
+To retrieve 3 records from a kintone app (id=25):
 	records, err := app.GetRecords(nil, "limit 3")
 	if err != nil {
 		log.Fatal(err)
 	}
 	// use records
 
-	To retrieve comments in record (id=3) from a kintone app (id=25)
+To retrieve comments in record (id=3) from a kintone app (id=25)
 	comments, err := app.GetRecordComments(3)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// use comments
 
-	To add comments into record (id=3) from a kintone app (id=25)
+To add comments into record (id=3) from a kintone app (id=25)
 	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: kintone.ConstCommentMentionTypeUser}
 	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: kintone.ConstCommentMentionTypeGroup}
+	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
+
 	var cmt Comment
 	cmt.Text = "Test comment 222"
-	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu}
+	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
 	cmtID, err := app.AddRecordComment(3, &cmt)
 	if err != nil {
 		log.Fatal(err)
 	}
 	// use comments id
 
-	To remove comments (id=12) in the record (id=3) from a kintone app (id=25)
+To remove comments (id=12) in the record (id=3) from a kintone app (id=25)
 	err := app.DeleteComment(3, 12)
 
 	if err != nil {

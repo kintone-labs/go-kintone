@@ -222,13 +222,13 @@ func TestGetRecordComments(t *testing.T) {
 }
 func TestAddRecordComment(t *testing.T) {
 	appTest := newApp(4)
-	mentionCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
-	mentionAdminGroup := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
+	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
+	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
+	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
 	var cmt Comment
 	cmt.Text = "Test comment 222"
-	cmt.Mentions = []*ObjMention{mentionAdminGroup, mentionCybozu}
-
-	cmtID, err := appTest.AddRecordComment(3, &cmt)
+	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
+	cmtID, err := appTest.AddRecordComment(2, &cmt)
 
 	if err != nil {
 		t.Error(err)
