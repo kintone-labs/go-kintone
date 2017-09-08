@@ -23,8 +23,19 @@ To retrieve 3 records from a kintone app (id=25):
 	}
 	// use records
 
-To retrieve comments in record (id=3) from a kintone app (id=25)
-	comments, err := app.GetRecordComments(3)
+To retrieve 10 latest comments in record (id=3) from a kintone app (id=25)
+	var offset uint64 = 0
+	var limit uint64 = 10
+	comments, err := app.GetRecordComments(3, "desc", offset, limit)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// use comments
+
+To retrieve oldest 10 comments and skips the first 30 comments in record (id=3) from a kintone app (id=25)
+	var offset uint64 = 30
+	var limit uint64 = 10
+	comments, err := app.GetRecordComments(3, "asc", offset, limit)
 	if err != nil {
 		log.Fatal(err)
 	}
