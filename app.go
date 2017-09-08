@@ -680,11 +680,6 @@ func (app *App) GetRecordComments(recordID uint64, order string, offset, limit u
 		Limit  uint64 `json:"limit"`
 	}
 
-	if order == "asc" {
-		order = "asc"
-	} else {
-		order = "desc"
-	}
 	data, _ := json.Marshal(requestBody{app.AppId, recordID, order, offset, limit})
 	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data))
 	if err != nil {
