@@ -211,17 +211,19 @@ func TestGuestSpace(t *testing.T) {
 }
 
 func TestGetRecordComments(t *testing.T) {
-	a := newApp(4)
-	if rec, err := a.GetRecordComments(3); err != nil {
+	a := newApp(13)
+	var offset uint64 = 5
+	var limit uint64 = 10
+	if rec, err := a.GetRecordComments(3, "asc", offset, limit); err != nil {
 		t.Error(err)
 	} else {
-		if !strings.Contains(rec[0].Text, "テストコメント") {
-			t.Errorf("comment mismatch. expected is テストコメント but actual %v", rec[0].Text)
+		if !strings.Contains(rec[0].Id, "6") {
+			t.Errorf("the first comment id mismatch. expected is 6 but actual %v", rec[0].Id)
 		}
 	}
 }
 func TestAddRecordComment(t *testing.T) {
-	appTest := newApp(4)
+	appTest := newApp(12)
 	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
 	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
 	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}

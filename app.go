@@ -671,12 +671,21 @@ func (app *App) DeleteRecords(ids []uint64) error {
 // GetRecordComments get comment list by record ID.
 //
 // It returns comment array.
-func (app *App) GetRecordComments(recordId uint64) ([]Comment, error) {
+func (app *App) GetRecordComments(recordID uint64, order string, offset, limit uint64) ([]Comment, error) {
 	type requestBody struct {
 		App    uint64 `json:"app"`
 		Record uint64 `json:"record"`
+		Order  string `json:"order"`
+		Offset uint64 `json:"offset"`
+		Limit  uint64 `json:"limit"`
 	}
-	data, _ := json.Marshal(requestBody{app.AppId, recordId})
+
+	if order == "asc" {
+		order = "asc"
+	} else {
+		order = "desc"
+	}
+	data, _ := json.Marshal(requestBody{app.AppId, recordID, order, offset, limit})
 	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data))
 	if err != nil {
 		return nil, err
