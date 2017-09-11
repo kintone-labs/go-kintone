@@ -8,16 +8,17 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
 
-func newApp(appId uint64) *App {
+func newApp(appID uint64) *App {
 	return &App{
 		Domain:   os.Getenv("KINTONE_DOMAIN"),
 		User:     os.Getenv("KINTONE_USER"),
 		Password: os.Getenv("KINTONE_PASSWORD"),
-		AppId:    appId,
+		AppId:    appID,
 	}
 }
 
@@ -31,10 +32,10 @@ func newAppWithApiToken(appId uint64) *App {
 
 func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		User:     os.Getenv("KINTONE_USER"),
-		Password: os.Getenv("KINTONE_PASSWORD"),
-		AppId:    appId,
+		Domain:       os.Getenv("KINTONE_DOMAIN"),
+		User:         os.Getenv("KINTONE_USER"),
+		Password:     os.Getenv("KINTONE_PASSWORD"),
+		AppId:        appId,
 		GuestSpaceId: guestSpaceId,
 	}
 }
@@ -206,5 +207,46 @@ func TestGuestSpace(t *testing.T) {
 	_, err := a.Fields()
 	if err != nil {
 		t.Error("GuestSpace failed", err)
+	}
+}
+
+func TestGetRecordComments(t *testing.T) {
+	a := newApp(13)
+	var offset uint64 = 5
+	var limit uint64 = 10
+	if rec, err := a.GetRecordComments(3, "asc", offset, limit); err != nil {
+		t.Error(err)
+	} else {
+		if !strings.Contains(rec[0].Id, "6") {
+			t.Errorf("the first comment id mismatch. expected is 6 but actual %v", rec[0].Id)
+		}
+	}
+}
+func TestAddRecordComment(t *testing.T) {
+	appTest := newApp(12)
+	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
+	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
+	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
+	var cmt Comment
+	cmt.Text = "Test comment 222"
+	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
+	cmtID, err := appTest.AddRecordComment(2, &cmt)
+
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("return value(comment-id) is %v", cmtID)
+	}
+}
+
+func TestDeleteComment(t *testing.T) {
+	appTest := newApp(4)
+	var cmtID uint64 = 14
+	err := appTest.DeleteComment(3, 12)
+
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("The comment with id =  %v has been deleted successefully!", cmtID)
 	}
 }

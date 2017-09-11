@@ -55,12 +55,13 @@ type UpdateKeyField interface {
 	JSONValue() interface{}
 }
 type UpdateKey struct {
-	FieldCode  string
-	Field      UpdateKeyField
+	FieldCode string
+	Field     UpdateKeyField
 }
+
 func (f UpdateKey) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"field":  f.FieldCode,
+		"field": f.FieldCode,
 		"value": f.Field.JSONValue(),
 	})
 }
@@ -540,7 +541,7 @@ func (app *App) UpdateRecordByKey(rec *Record, ignoreRevision bool, keyField str
 	updateKey := rec.Fields[keyField]
 	_rec := *rec
 	_rec.Fields = make(map[string]interface{})
-	for k,v := range rec.Fields {
+	for k, v := range rec.Fields {
 		if k != keyField {
 			_rec.Fields[k] = v
 		}
@@ -606,8 +607,8 @@ func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField
 
 	type update_t struct {
 		UpdateKey UpdateKey `json:"updateKey"`
-		Revision  int64       `json:"revision,string"`
-		Record    *Record     `json:"record"`
+		Revision  int64     `json:"revision,string"`
+		Record    *Record   `json:"record"`
 	}
 	type request_body struct {
 		App     uint64     `json:"app,string"`
@@ -622,9 +623,9 @@ func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField
 		updateKey := rec.Fields[keyField]
 		_rec := *rec
 		_rec.Fields = make(map[string]interface{})
-		for k,v := range rec.Fields {
+		for k, v := range rec.Fields {
 			if k != keyField {
-		  	_rec.Fields[k] = v
+				_rec.Fields[k] = v
 			}
 		}
 		t_recs = append(t_recs, update_t{UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
@@ -656,6 +657,94 @@ func (app *App) DeleteRecords(ids []uint64) error {
 	}
 	data, _ := json.Marshal(request_body{app.AppId, ids})
 	req, err := app.newRequest("DELETE", "records", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return err
+	}
+	_, err = parseResponse(resp)
+	return err
+}
+
+// GetRecordComments get comment list by record ID.
+//
+// It returns comment array.
+func (app *App) GetRecordComments(recordID uint64, order string, offset, limit uint64) ([]Comment, error) {
+	type requestBody struct {
+		App    uint64 `json:"app"`
+		Record uint64 `json:"record"`
+		Order  string `json:"order"`
+		Offset uint64 `json:"offset"`
+		Limit  uint64 `json:"limit"`
+	}
+
+	data, _ := json.Marshal(requestBody{app.AppId, recordID, order, offset, limit})
+	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return nil, ErrInvalidResponse
+	}
+	recs, err := DecodeRecordComments(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return recs, nil
+}
+
+// AddRecordComments post some comments by record ID.
+//
+// If successful, it returns the target record ID.
+func (app *App) AddRecordComment(recordId uint64, comment *Comment) (id string, err error) {
+	type requestBody struct {
+		App     uint64   `json:"app,string"`
+		Record  uint64   `json:"record,string"`
+		Comment *Comment `json:"comment"`
+	}
+	data, _ := json.Marshal(requestBody{app.AppId, recordId, comment})
+	req, err := app.newRequest("POST", "record/comment", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return
+	}
+	var t struct {
+		Id string `json:"id"`
+	}
+	if json.Unmarshal(body, &t) != nil {
+		err = ErrInvalidResponse
+		return
+	}
+	id = t.Id
+	return
+}
+
+// DeleteComment - Delete single comment
+func (app *App) DeleteComment(recordId uint64, commentId uint64) error {
+	type requestBody struct {
+		App       uint64 `json:"app,string"`
+		RecordID  uint64 `json:"record,string"`
+		CommentID uint64 `json:"comment,string"`
+	}
+	requestData := requestBody{app.AppId, recordId, commentId}
+	data, _ := json.Marshal(requestData)
+
+	req, err := app.newRequest("DELETE", "record/comment", bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
