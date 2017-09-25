@@ -41,15 +41,14 @@ type AppError struct {
 	Message        string `json:"message"` // Human readable message.
 	Id             string `json:"id"`      // A unique error ID.
 	Code           string `json:"code"`    // For machines.
-	Errors         string `json:"errors"`  // Error Description.
 }
 
 func (e *AppError) Error() string {
 	if len(e.Message) == 0 {
 		return "HTTP error: " + e.HttpStatus
 	}
-	return fmt.Sprintf("AppError: %d [%s] %s (%s) %s",
-		e.HttpStatusCode, e.Code, e.Message, e.Id, e.Errors)
+	return fmt.Sprintf("AppError: %d [%s] %s (%s)",
+		e.HttpStatusCode, e.Code, e.Message, e.Id)
 }
 
 type UpdateKeyField interface {
@@ -209,26 +208,10 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 				HttpStatusCode: resp.StatusCode,
 			}
 		}
-
-		//Get other than the Errors property
 		var ae AppError
 		json.Unmarshal(body, &ae)
 		ae.HttpStatus = resp.Status
 		ae.HttpStatusCode = resp.StatusCode
-
-		//Get the Errors property
-		var errors interface{}
-		json.Unmarshal(body, &errors)
-		msg := errors.(map[string]interface{})
-		v, ok := msg["errors"]
-		//If the Errors property exists
-		if ok {
-			result, err := json.Marshal(v)
-			if err != nil {
-				return nil, err
-			}
-			ae.Errors = string(result)
-		}
 		return nil, &ae
 	}
 	return body, nil
