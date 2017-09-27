@@ -12,7 +12,7 @@ func TestDecodeRecordComments(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(rec) != 2 {
-		t.Fatal("invalud record count!")
+		t.Fatal("invalid record count!")
 	}
 	if rec[0].Id != "2" {
 		t.Errorf("comment id mismatch. actual %v", rec[0].Id)
