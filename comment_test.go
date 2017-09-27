@@ -3,7 +3,7 @@ package kintone
 import "testing"
 
 func TestDecodeRecordComments(t *testing.T) {
-    j := []byte(`
+	j := []byte(`
 {"comments":[{"id":"2","text":"ほげほげ","createdAt":"2016-11-07T19:53:32Z","creator":{"code":"xxx.tat","name":"さんぷる"},"mentions":[{"code":"wolf","type":"USER"}]},{"id":"1","text":"ふがふが","createdAt":"2016-11-07T19:53:27Z","creator":{"code":"xxx.tat","name":"さんぷる"},"mentions":[]}],"older":false,"newer":false}
 `)
 
@@ -29,5 +29,5 @@ func TestDecodeRecordComments(t *testing.T) {
 	}
 	if rec[0].Mentions[0].Code != "wolf" {
 		t.Errorf("comment mention-code mismatch. actual %v", rec[0].Mentions[0].Code)
-	}	
+	}
 }
