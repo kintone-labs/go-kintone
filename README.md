@@ -11,20 +11,21 @@ to access [kintone][] with its official REST API ([en][APIen], [ja][APIja]).
 
 [kintone][] is our B2B cloud service; you can create great web apps instantly with kintone!
 
-License
--------
+## Version
+
+0.1.0
+
+## License
 
 This software is licensed under [the BSD 2-clause license][bsd2].
 
-Coverage
---------
+## Coverage
 
 * kintone application API
 * ~~kintone space API~~
 * ~~user management API~~
 
-Usage
------
+## Usage
 
 To import this package:
 
@@ -37,3 +38,7 @@ Visit the docs on [godoc.org][godoc].
 [APIja]: https://cybozudev.zendesk.com/hc/ja
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
 [godoc]: http://godoc.org/github.com/kintone/go-kintone
+
+## Copyright
+
+Copyright(c) Cybozu, Inc.
