@@ -89,7 +89,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 // Errors returned by the methods of App may be one of *AppError,
 // ErrTimeout, ErrInvalidResponse, or ErrTooMany.
 type App struct {
-	Domain            string        // domain name.  ex: "bozuman.cybozu.com"
+	Domain            string        // domain name.  ex: "sample.cybozu.com", "sample.kintone.com", "sample.cybozu.cn"
 	User              string        // User account for API.
 	Password          string        // User password for API.
 	AppId             uint64        // application ID.
