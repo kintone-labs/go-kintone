@@ -101,6 +101,7 @@ type App struct {
 	basicAuth         bool          // true to use Basic Authentication.
 	basicAuthUser     string        // User name for Basic Authentication.
 	basicAuthPassword string        // Password for Basic Authentication.
+	userAgentHeader   string        // User-agent request header string
 }
 
 // SetBasicAuth enables use of HTTP basic authentication for access
@@ -109,6 +110,16 @@ func (app *App) SetBasicAuth(user, password string) {
 	app.basicAuth = true
 	app.basicAuthUser = user
 	app.basicAuthPassword = password
+}
+
+// SetUserAgentHeader set custom user-agent header for http request
+func (app *App) SetUserAgentHeader(userAgentHeader string) {
+	app.userAgentHeader = userAgentHeader
+}
+
+// GetUserAgentHeader get user-agent header string
+func (app *App) GetUserAgentHeader() string {
+	return app.userAgentHeader
 }
 
 func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, error) {
@@ -142,6 +153,10 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
 	req.Header.Set("Content-Type", "application/json")
+
+	if len(app.GetUserAgentHeader()) != 0 {
+		req.Header.Set("User-Agent", app.userAgentHeader)
+	}
 	return req, nil
 }
 
