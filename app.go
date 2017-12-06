@@ -111,8 +111,8 @@ func (app *App) SetBasicAuth(user, password string) {
 	app.basicAuthPassword = password
 }
 
-// IsBasicAuth indicate authentication is basic or not
-func (app *App) IsBasicAuth() bool {
+// HasBasicAuth indicate authentication is basic or not
+func (app *App) HasBasicAuth() bool {
 	return app.basicAuth
 }
 
