@@ -24,6 +24,8 @@ import (
 )
 
 const (
+	NAME            = "go-kintone"
+	VERSION         = "0.1.1"
 	DEFAULT_TIMEOUT = time.Second * 600 // Default value for App.Timeout
 )
 
@@ -156,6 +158,8 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 
 	if len(app.GetUserAgentHeader()) != 0 {
 		req.Header.Set("User-Agent", app.userAgentHeader)
+	} else {
+		req.Header.Set("User-Agent", NAME+"/"+VERSION)
 	}
 	return req, nil
 }
