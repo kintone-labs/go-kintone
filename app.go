@@ -111,6 +111,21 @@ func (app *App) SetBasicAuth(user, password string) {
 	app.basicAuthPassword = password
 }
 
+// IsBasicAuth indicate authentication is basic or not
+func (app *App) IsBasicAuth() bool {
+	return app.basicAuth
+}
+
+// GetBasicAuthUser return username string for basic authentication
+func (app *App) GetBasicAuthUser() string {
+	return app.basicAuthUser
+}
+
+// GetBasicAuthPassword return password string for basic authentication
+func (app *App) GetBasicAuthPassword() string {
+	return app.basicAuthPassword
+}
+
 func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, error) {
 	if len(app.token) == 0 {
 		app.token = base64.StdEncoding.EncodeToString(
