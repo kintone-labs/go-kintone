@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	NAME            = "go-kintone"
+	NAME            = "kintone-go-SDK"
 	VERSION         = "0.1.1"
 	DEFAULT_TIMEOUT = time.Second * 600 // Default value for App.Timeout
 )
