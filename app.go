@@ -114,6 +114,21 @@ func (app *App) SetBasicAuth(user, password string) {
 	app.basicAuthPassword = password
 }
 
+// HasBasicAuth indicate authentication is basic or not
+func (app *App) HasBasicAuth() bool {
+	return app.basicAuth
+}
+
+// GetBasicAuthUser return username string for basic authentication
+func (app *App) GetBasicAuthUser() string {
+	return app.basicAuthUser
+}
+
+// GetBasicAuthPassword return password string for basic authentication
+func (app *App) GetBasicAuthPassword() string {
+	return app.basicAuthPassword
+}
+
 // SetUserAgentHeader set custom user-agent header for http request
 func (app *App) SetUserAgentHeader(userAgentHeader string) {
 	app.userAgentHeader = userAgentHeader
