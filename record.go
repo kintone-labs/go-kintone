@@ -262,7 +262,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 			if mtime.UnmarshalText([]byte(v.Value.(string))) != nil {
 				return nil, fmt.Errorf("Invalid datetime: %v", v.Value)
 			}
-			fields[key] = CreationTimeField(mtime)
+			fields[key] = ModificationTimeField(mtime)
 		case FT_SUBTABLE:
 			b2, err := json.Marshal(v.Value)
 			if err != nil {
