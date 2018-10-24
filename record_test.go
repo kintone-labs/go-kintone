@@ -43,6 +43,10 @@ func TestDecodeRecord(t *testing.T) {
             "type": "CREATED_TIME",
             "value": "2012-02-03T08:50:00Z"
         },
+        "updated_time": {
+            "type": "UPDATED_TIME",
+            "value": "2018-10-24T08:50:00Z"
+        },
         "dropdown": {
             "type": "DROP_DOWN",
             "value": "Option1"
@@ -163,6 +167,28 @@ func TestDecodeRecord(t *testing.T) {
 		t.Error("Minute != 50")
 	}
 	if time.Time(ctime).Second() != 0 {
+		t.Error("Second != 0")
+	}
+	mtime, ok := fields["updated_time"].(ModificationTimeField)
+	if !ok {
+		t.Error("Not a ModificationTimeField")
+	}
+	if time.Time(mtime).Year() != 2018 {
+		t.Error("Year != 2018")
+	}
+	if time.Time(mtime).Month() != time.October {
+		t.Error("Month != October")
+	}
+	if time.Time(mtime).Day() != 24 {
+		t.Error("Day != 24")
+	}
+	if time.Time(mtime).Hour() != 8 {
+		t.Error("Hour != 8")
+	}
+	if time.Time(mtime).Minute() != 50 {
+		t.Error("Minute != 50")
+	}
+	if time.Time(mtime).Second() != 0 {
 		t.Error("Second != 0")
 	}
 	dropdown, ok := fields["dropdown"].(SingleSelectField)
@@ -316,6 +342,10 @@ func TestDecodeRecords(t *testing.T) {
                 "type": "CREATED_TIME",
                 "value": "2012-02-03T08:50:00Z"
             },
+            "updated_time": {
+                "type": "UPDATED_TIME",
+                "value": "2018-10-24T08:50:00Z"
+            },
             "dropdown": {
                 "type": "DROP_DOWN",
                 "value": null
@@ -329,6 +359,10 @@ func TestDecodeRecords(t *testing.T) {
             "created_time": {
                 "type": "CREATED_TIME",
                 "value": "2012-02-03T09:22:00Z"
+            },
+            "updated_time": {
+                "type": "UPDATED_TIME",
+                "value": "2018-10-24T09:22:00Z"
             },
             "dropdown": {
                 "type": "DROP_DOWN",
