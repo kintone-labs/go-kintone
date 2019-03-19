@@ -32,7 +32,7 @@ func NewRecord(fields map[string]interface{}) *Record {
 	return &Record{0, -1, fields}
 }
 
-// NewRecord creates using an existing record id.
+// NewRecordWithId creates using an existing record id.
 //
 // The revision number is initialized to -1.
 func NewRecordWithId(id uint64, fields map[string]interface{}) *Record {

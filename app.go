@@ -752,7 +752,7 @@ func (app *App) GetRecordComments(recordID uint64, order string, offset, limit u
 	return recs, nil
 }
 
-// AddRecordComments post some comments by record ID.
+// AddRecordComment post some comments by record ID.
 //
 // If successful, it returns the target record ID.
 func (app *App) AddRecordComment(recordId uint64, comment *Comment) (id string, err error) {
