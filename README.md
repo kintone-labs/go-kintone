@@ -35,7 +35,7 @@ Visit the docs on [godoc.org][godoc].
 
 [kintone]: https://www.kintone.com/
 [APIen]: https://developer.kintone.io/hc/en-us
-[APIja]: https://cybozudev.zendesk.com/hc/ja
+[APIja]: https://developer.cybozu.io/hc/ja
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
 [godoc]: http://godoc.org/github.com/kintone/go-kintone
 
