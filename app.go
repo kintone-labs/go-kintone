@@ -72,19 +72,40 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 // App provides kintone application API client.
 //
 // You need to provide Domain, User, Password, and AppId.
-// You can also use the api token instead of user/password.
-// When using Google AppEngine, you must supply Client too.
+// You can also use an API token instead of user/password.
+// If you require specialized client settings, for instance
+// need to specify a client certificate, proxy settings, or
+// are using Google AppEngine, you can build an *http.Client
+// instance and supply it to Client.
+//
+// ex: Google AppEngine
 //
 //	import (
 //		"appengine"
 //		"appengine/urlfetch"
 //		"github.com/kintone/go-kintone"
-//		"http"
+//		"net/http"
 //	)
 //
 //	func handler(w http.ResponseWriter, r *http.Request) {
 //		c := appengine.NewContext(r)
 //		app := &kintone.App{urlfetch.Client(c)}
+//		...
+//	}
+//
+// ex: proxy
+//
+//	import (
+//		"net/http"
+//		"net/url"
+//		"github.com/kintone/go-kintone"
+//	)
+//
+//	func main() {
+//		proxyURL, _ := url.Parse("https://proxy.example.com")
+//		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
+//		client := &http.Client(Transport: transport)
+//		app := &kintone.App{Client: client}
 //		...
 //	}
 //

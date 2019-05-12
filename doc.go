@@ -1,7 +1,7 @@
 /*
 Package kintone provides interfaces for kintone REST API.
 
-See http://developers.kintone.com/ for API specs.
+See https://developer.kintone.io for API specs.
 
 	import (
 		"log"
