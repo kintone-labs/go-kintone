@@ -25,7 +25,7 @@ import (
 
 const (
 	NAME            = "kintone-go-SDK"
-	VERSION         = "0.1.1"
+	VERSION         = "0.1.2"
 	DEFAULT_TIMEOUT = time.Second * 600 // Default value for App.Timeout
 )
 
@@ -390,6 +390,52 @@ func (app *App) GetAllRecords(fields []string) ([]*Record, error) {
 	}
 }
 
+func isAllowedLang(allowedLangs []string, lang string) bool {
+	for _, allowedLang := range allowedLangs {
+		if lang == allowedLang {
+			return true
+		}
+	}
+	return false
+}
+
+// GetProcess retrieves the process management settings
+// This method can only be used when App is initialized with password authentication
+// lang must be one of default, en, zh, ja, user
+func (app *App) GetProcess(lang string) (process *Process, err error) {
+	type request_body struct {
+		App  uint64 `json:"app,string"`
+		lang string `json:"lang,string"`
+	}
+	if app.User == "" || app.Password == "" {
+		err = errors.New("This API only supports password authentication")
+		return
+	}
+	allowedLangs := []string{"default", "en", "zh", "ja", "user"}
+	if !isAllowedLang(allowedLangs, lang) {
+		err = errors.New("Illegal language provided")
+		return
+	}
+	data, _ := json.Marshal(request_body{app.AppId, lang})
+	req, err := app.newRequest("GET", "app/status", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return
+	}
+	process, err = DecodeProcess(body)
+	if err != nil {
+		err = ErrInvalidResponse
+	}
+	return
+}
+
 // FileData stores downloaded file data.
 type FileData struct {
 	ContentType string    // MIME type of the contents.
@@ -713,6 +759,36 @@ func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField
 	}
 	_, err = parseResponse(resp)
 	return err
+}
+
+// UpdateRecordStatus updates the Status of a record
+func (app *App) UpdateRecordStatus(rec *Record, action *ProcessAction, assignee *Entity, ignoreRevision bool) (err error) {
+	type request_body struct {
+		App      uint64 `json:"app,string"`
+		Id       uint64 `json:"id,string"`
+		Revision int64  `json:"revision,string"`
+		Action   string `json:"action"`
+		Assignee string `json:"assignee,omitempty"`
+	}
+	rev := rec.Revision()
+	if ignoreRevision {
+		rev = -1
+	}
+	var code string
+	if assignee != nil {
+		code = assignee.Code
+	}
+	data, _ := json.Marshal(request_body{app.AppId, rec.id, rev, action.Name, code})
+	req, err := app.newRequest("PUT", "record/status", bytes.NewReader(data))
+	if err != nil {
+		return
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return
+	}
+	_, err = parseResponse(resp)
+	return
 }
 
 // DeleteRecords deletes multiple records.
