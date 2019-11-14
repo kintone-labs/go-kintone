@@ -7,34 +7,38 @@ package kintone
 import (
 	"bytes"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
+const KINTONE_DOMAIN = "YOUR_DOMAIN"
+const KINTONE_USER = "YOUR_KINTONE_USER"
+const KINTONE_PASSWORD = "YOUR_KINTONE_PASSWORD"
+const KINTONE_API_TOKEN = "YOUR_API_TOKEN"
+
 func newApp(appID uint64) *App {
 	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		User:     os.Getenv("KINTONE_USER"),
-		Password: os.Getenv("KINTONE_PASSWORD"),
+		Domain:   KINTONE_DOMAIN,
+		User:     KINTONE_USER,
+		Password: KINTONE_PASSWORD,
 		AppId:    appID,
 	}
 }
 
 func newAppWithApiToken(appId uint64) *App {
 	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		ApiToken: os.Getenv("KINTONE_API_TOKEN"),
+		Domain:   KINTONE_DOMAIN,
+		ApiToken: KINTONE_API_TOKEN,
 		AppId:    appId,
 	}
 }
 
 func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	return &App{
-		Domain:       os.Getenv("KINTONE_DOMAIN"),
-		User:         os.Getenv("KINTONE_USER"),
-		Password:     os.Getenv("KINTONE_PASSWORD"),
+		Domain:       KINTONE_DOMAIN,
+		User:         KINTONE_USER,
+		Password:     KINTONE_PASSWORD,
 		AppId:        appId,
 		GuestSpaceId: guestSpaceId,
 	}
