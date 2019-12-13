@@ -538,6 +538,32 @@ func escapeQuotes(s string) string {
 	return quoteEscaper.Replace(s)
 }
 
+func (app *App) deleteCursor(cursorId string) (string, error) {
+	type requestBody struct {
+		Id string `json:"id"`
+	}
+	data, err := json.Marshal(requestBody{Id: cursorId})
+	if err != nil {
+		return "", err
+	}
+	req, err := app.newRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
+	if err != nil {
+		return "", err
+	}
+	res, err := app.do(req)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := parseResponse(res)
+	if err != nil {
+		return "", err
+	}
+	if result != nil {
+	}
+	return "delete success", nil
+}
+
 // Upload uploads a file.
 //
 // If successfully uploaded, the key string of the uploaded file is returned.
