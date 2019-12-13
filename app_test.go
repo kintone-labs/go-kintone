@@ -6,6 +6,7 @@ package kintone
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -169,6 +170,32 @@ func TestDeleteRecord(t *testing.T) {
 	if err := a.DeleteRecords(ids); err != nil {
 		t.Error("DeleteRecords failed", err)
 	}
+}
+
+func TestGetCursor(t *testing.T) {
+	app := newApp(18)
+	result, err := app.getCurSor("2e17d05f-d046-494e-ae8a-e2f82d68ff05")
+	if err != nil {
+		t.Errorf("error %v", err)
+	}
+	fmt.Println(string(result))
+
+}
+func TestDeleteCursor(t *testing.T) {
+	app := newApp(18)
+	result, err := app.deleteCursor("b997c4d6-b514-4567-9c00-1014770ead5c")
+	if err != nil {
+		t.Errorf("error %v", err)
+	}
+	fmt.Println(result)
+}
+func TestCreateCurSor(t *testing.T) {
+	app := newAppWithApiToken(18)
+	result, err := app.createCursor([]string{"$id", "date"})
+	if err != nil {
+		t.Errorf("error %v", err)
+	}
+	fmt.Println("result", string(result))
 }
 
 func TestFields(t *testing.T) {
