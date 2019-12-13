@@ -202,7 +202,7 @@ func (app *App) GetUserAgentHeader() string {
 	return app.userAgentHeader
 }
 
-func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, error) {
+func (app *App) newRequest(method, api string, body io.Reader, query string) (*http.Request, error) {
 	if len(app.token) == 0 {
 		app.token = base64.StdEncoding.EncodeToString(
 			[]byte(app.User + ":" + app.Password))
@@ -232,7 +232,10 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 	} else {
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
-	req.Header.Set("Content-Type", "application/json")
+
+	if method != "GET" {
+		req.Header.Set("Content-Type", "application/json")
+	}
 
 	if len(app.GetUserAgentHeader()) != 0 {
 		req.Header.Set("User-Agent", app.userAgentHeader)
@@ -339,7 +342,7 @@ func (app *App) GetRecord(id uint64) (*Record, error) {
 		Id  uint64 `json:"id,string"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, id})
-	req, err := app.newRequest("GET", "record", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "record", bytes.NewReader(data), "")
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +377,7 @@ func (app *App) GetRecords(fields []string, query string) ([]*Record, error) {
 		Query  string   `json:"query"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, fields, query})
-	req, err := app.newRequest("GET", "records", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "records", bytes.NewReader(data), "")
 	if err != nil {
 		return nil, err
 	}
@@ -409,7 +412,7 @@ func (app *App) GetAllRecords(fields []string) ([]*Record, error) {
 			query = fmt.Sprintf("limit 100 offset %v", len(recs))
 		}
 		data, _ := json.Marshal(request_body{app.AppId, fields, query})
-		req, err := app.newRequest("GET", "records", bytes.NewReader(data))
+		req, err := app.newRequest("GET", "records", bytes.NewReader(data), "")
 		if err != nil {
 			return nil, err
 		}
@@ -459,7 +462,7 @@ func (app *App) GetProcess(lang string) (process *Process, err error) {
 		return
 	}
 	data, _ := json.Marshal(request_body{app.AppId, lang})
-	req, err := app.newRequest("GET", "app/status", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "app/status", bytes.NewReader(data), "")
 	if err != nil {
 		return
 	}
@@ -492,7 +495,7 @@ func (app *App) Download(fileKey string) (*FileData, error) {
 		FileKey string `json:"fileKey"`
 	}
 	data, _ := json.Marshal(request_body{fileKey})
-	req, err := app.newRequest("GET", "file", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "file", bytes.NewReader(data), "")
 	if err != nil {
 		return nil, err
 	}
@@ -564,7 +567,7 @@ func (app *App) Upload(fileName, contentType string, data io.Reader) (key string
 		return
 	}
 
-	req, err := app.newRequest("POST", "file", f)
+	req, err := app.newRequest("POST", "file", f, "")
 	if err != nil {
 		return
 	}
@@ -597,7 +600,7 @@ func (app *App) AddRecord(rec *Record) (id string, err error) {
 		Record *Record `json:"record"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, rec})
-	req, err := app.newRequest("POST", "record", bytes.NewReader(data))
+	req, err := app.newRequest("POST", "record", bytes.NewReader(data), "")
 	if err != nil {
 		return
 	}
@@ -635,7 +638,7 @@ func (app *App) AddRecords(recs []*Record) ([]string, error) {
 		Records []*Record `json:"records"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, recs})
-	req, err := app.newRequest("POST", "records", bytes.NewReader(data))
+	req, err := app.newRequest("POST", "records", bytes.NewReader(data), "")
 	if err != nil {
 		return nil, err
 	}
@@ -674,7 +677,7 @@ func (app *App) UpdateRecord(rec *Record, ignoreRevision bool) error {
 		rev = -1
 	}
 	data, _ := json.Marshal(request_body{app.AppId, rec.id, rev, rec})
-	req, err := app.newRequest("PUT", "record", bytes.NewReader(data))
+	req, err := app.newRequest("PUT", "record", bytes.NewReader(data), "")
 	if err != nil {
 		return err
 	}
@@ -708,7 +711,7 @@ func (app *App) UpdateRecordByKey(rec *Record, ignoreRevision bool, keyField str
 	}
 	data, _ := json.Marshal(request_body{app.AppId, UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
 
-	req, err := app.newRequest("PUT", "record", bytes.NewReader(data))
+	req, err := app.newRequest("PUT", "record", bytes.NewReader(data), "")
 	if err != nil {
 		return err
 	}
@@ -747,7 +750,7 @@ func (app *App) UpdateRecords(recs []*Record, ignoreRevision bool) error {
 		t_recs = append(t_recs, update_t{rec.Id(), rev, rec})
 	}
 	data, _ := json.Marshal(request_body{app.AppId, t_recs})
-	req, err := app.newRequest("PUT", "records", bytes.NewReader(data))
+	req, err := app.newRequest("PUT", "records", bytes.NewReader(data), "")
 	if err != nil {
 		return err
 	}
@@ -791,7 +794,7 @@ func (app *App) UpdateRecordsByKey(recs []*Record, ignoreRevision bool, keyField
 		t_recs = append(t_recs, update_t{UpdateKey{keyField, updateKey.(UpdateKeyField)}, rev, &_rec})
 	}
 	data, _ := json.Marshal(request_body{app.AppId, t_recs})
-	req, err := app.newRequest("PUT", "records", bytes.NewReader(data))
+	req, err := app.newRequest("PUT", "records", bytes.NewReader(data), "")
 	if err != nil {
 		return err
 	}
@@ -821,7 +824,7 @@ func (app *App) UpdateRecordStatus(rec *Record, action *ProcessAction, assignee 
 		code = assignee.Code
 	}
 	data, _ := json.Marshal(request_body{app.AppId, rec.id, rev, action.Name, code})
-	req, err := app.newRequest("PUT", "record/status", bytes.NewReader(data))
+	req, err := app.newRequest("PUT", "record/status", bytes.NewReader(data), "")
 	if err != nil {
 		return
 	}
@@ -846,7 +849,7 @@ func (app *App) DeleteRecords(ids []uint64) error {
 		Ids []uint64 `json:"ids,string"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId, ids})
-	req, err := app.newRequest("DELETE", "records", bytes.NewReader(data))
+	req, err := app.newRequest("DELETE", "records", bytes.NewReader(data), "")
 	if err != nil {
 		return err
 	}
@@ -871,7 +874,7 @@ func (app *App) GetRecordComments(recordID uint64, order string, offset, limit u
 	}
 
 	data, _ := json.Marshal(requestBody{app.AppId, recordID, order, offset, limit})
-	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "record/comments", bytes.NewReader(data), "")
 	if err != nil {
 		return nil, err
 	}
@@ -901,7 +904,7 @@ func (app *App) AddRecordComment(recordId uint64, comment *Comment) (id string, 
 		Comment *Comment `json:"comment"`
 	}
 	data, _ := json.Marshal(requestBody{app.AppId, recordId, comment})
-	req, err := app.newRequest("POST", "record/comment", bytes.NewReader(data))
+	req, err := app.newRequest("POST", "record/comment", bytes.NewReader(data), "")
 	if err != nil {
 		return
 	}
@@ -934,7 +937,7 @@ func (app *App) DeleteComment(recordId uint64, commentId uint64) error {
 	requestData := requestBody{app.AppId, recordId, commentId}
 	data, _ := json.Marshal(requestData)
 
-	req, err := app.newRequest("DELETE", "record/comment", bytes.NewReader(data))
+	req, err := app.newRequest("DELETE", "record/comment", bytes.NewReader(data), "")
 	if err != nil {
 		return err
 	}
@@ -1014,7 +1017,7 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		App uint64 `json:"app,string"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId})
-	req, err := app.newRequest("GET", "form", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "form", bytes.NewReader(data), "")
 	if err != nil {
 		return nil, err
 	}
