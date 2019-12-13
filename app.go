@@ -46,6 +46,28 @@ type AppError struct {
 	Errors         string `json:"errors"`  // Error Description.
 }
 
+func (app *App) createCursor(fields []string) ([]byte, error) {
+	type cursor struct {
+		App    uint64   `json:"app"`
+		Fields []string `json:"fields"`
+	}
+	var data = cursor{App: app.AppId, Fields: fields}
+	jsonData, _ := json.Marshal(data)
+	req, err := app.newRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
+	if err != nil {
+		return nil, err
+	}
+	res, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(res)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
 func (e *AppError) Error() string {
 	if len(e.Message) == 0 {
 		return "HTTP error: " + e.HttpStatus
