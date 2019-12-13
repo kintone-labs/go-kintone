@@ -91,6 +91,26 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func (app *App) getCurSor(idCursor string) ([]byte, error) {
+	type requestBody struct {
+		Id string `json:"id,string"`
+	}
+
+	req, err := app.newRequest("GET", "records/cursor", nil, "id="+idCursor)
+	if err != nil {
+		return nil, err
+	}
+	resGetCursor, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	result, err := parseResponse(resGetCursor)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 // App provides kintone application API client.
 //
 // You need to provide Domain, User, Password, and AppId.
