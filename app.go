@@ -46,28 +46,6 @@ type AppError struct {
 	Errors         string `json:"errors"`  // Error Description.
 }
 
-func (app *App) createCursor(fields []string) ([]byte, error) {
-	type cursor struct {
-		App    uint64   `json:"app"`
-		Fields []string `json:"fields"`
-	}
-	var data = cursor{App: app.AppId, Fields: fields}
-	jsonData, _ := json.Marshal(data)
-	req, err := app.newRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
-	if err != nil {
-		return nil, err
-	}
-	res, err := app.do(req)
-	if err != nil {
-		return nil, err
-	}
-	body, err := parseResponse(res)
-	if err != nil {
-		return nil, err
-	}
-	return body, nil
-}
-
 func (e *AppError) Error() string {
 	if len(e.Message) == 0 {
 		return "HTTP error: " + e.HttpStatus
@@ -89,26 +67,6 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 		"field": f.FieldCode,
 		"value": f.Field.JSONValue(),
 	})
-}
-
-func (app *App) getCurSor(idCursor string) ([]byte, error) {
-	type requestBody struct {
-		Id string `json:"id,string"`
-	}
-
-	req, err := app.newRequest("GET", "records/cursor", nil, "id="+idCursor)
-	if err != nil {
-		return nil, err
-	}
-	resGetCursor, err := app.do(req)
-	if err != nil {
-		return nil, err
-	}
-	result, err := parseResponse(resGetCursor)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 // App provides kintone application API client.
@@ -232,7 +190,6 @@ func (app *App) newRequest(method, api string, body io.Reader, query string) (*h
 	} else {
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
-
 	if method != "GET" {
 		req.Header.Set("Content-Type", "application/json")
 	}
@@ -536,32 +493,6 @@ var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
 
 func escapeQuotes(s string) string {
 	return quoteEscaper.Replace(s)
-}
-
-func (app *App) deleteCursor(cursorId string) (string, error) {
-	type requestBody struct {
-		Id string `json:"id"`
-	}
-	data, err := json.Marshal(requestBody{Id: cursorId})
-	if err != nil {
-		return "", err
-	}
-	req, err := app.newRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
-	if err != nil {
-		return "", err
-	}
-	res, err := app.do(req)
-	if err != nil {
-		return "", err
-	}
-
-	result, err := parseResponse(res)
-	if err != nil {
-		return "", err
-	}
-	if result != nil {
-	}
-	return "delete success", nil
 }
 
 // Upload uploads a file.
@@ -1070,4 +1001,72 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		ret[fi.Code] = fi
 	}
 	return ret, nil
+}
+
+func (app *App) createCursor(fields []string) ([]byte, error) {
+	type cursor struct {
+		App    uint64   `json:"app"`
+		Fields []string `json:"fields"`
+	}
+	var data = cursor{App: app.AppId, Fields: fields}
+	jsonData, _ := json.Marshal(data)
+	req, err := app.newRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
+	if err != nil {
+		return nil, err
+	}
+	res, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(res)
+	if err != nil {
+		return nil, err
+	}
+	return body, nil
+}
+
+func (app *App) deleteCursor(cursorId string) (string, error) {
+	type requestBody struct {
+		Id string `json:"id"`
+	}
+	data, err := json.Marshal(requestBody{Id: cursorId})
+	if err != nil {
+		return "", err
+	}
+	req, err := app.newRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
+	if err != nil {
+		return "", err
+	}
+	res, err := app.do(req)
+	if err != nil {
+		return "", err
+	}
+
+	result, err := parseResponse(res)
+	if err != nil {
+		return "", err
+	}
+	if result != nil {
+	}
+	return "delete success", nil
+}
+
+func (app *App) getCurSor(idCursor string) ([]byte, error) {
+	type requestBody struct {
+		Id string `json:"id,string"`
+	}
+
+	req, err := app.newRequest("GET", "records/cursor", nil, "id="+idCursor)
+	if err != nil {
+		return nil, err
+	}
+	resGetCursor, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	result, err := parseResponse(resGetCursor)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

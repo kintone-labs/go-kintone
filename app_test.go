@@ -83,7 +83,14 @@ func TestGetRecord(t *testing.T) {
 		t.Log(len(recs))
 	}
 }
-
+func TestGetAllRecord(t *testing.T) {
+	os.Setenv("KINTONE_DOMAIN", "tgbn0.kintone.com")
+	os.Setenv("KINTONE_USER", "Administrator")
+	os.Setenv("KINTONE_PASSWORD", "cybozu123")
+	a := newApp(18)
+	result, _ := a.GetAllRecords([]string{"id"})
+	fmt.Println(result)
+}
 func TestAddRecord(t *testing.T) {
 	a := newApp(9004)
 	if len(a.Password) == 0 {
@@ -175,25 +182,34 @@ func TestDeleteRecord(t *testing.T) {
 func TestGetCursor(t *testing.T) {
 	app := newApp(18)
 	result, err := app.getCurSor("2e17d05f-d046-494e-ae8a-e2f82d68ff05")
+	if len(app.Password) == 0 {
+		t.Skip()
+	}
 	if err != nil {
-		t.Errorf("error %v", err)
+		t.Errorf("get cursor is fail: %v", err)
 	}
 	fmt.Println(string(result))
 
 }
 func TestDeleteCursor(t *testing.T) {
 	app := newApp(18)
+	if len(app.Password) == 0 {
+		t.Skip()
+	}
 	result, err := app.deleteCursor("b997c4d6-b514-4567-9c00-1014770ead5c")
 	if err != nil {
-		t.Errorf("error %v", err)
+		t.Errorf("delete cursor is fail: %v", err)
 	}
 	fmt.Println(result)
 }
 func TestCreateCurSor(t *testing.T) {
 	app := newAppWithApiToken(18)
+	if len(app.ApiToken) == 0 {
+		t.Skip()
+	}
 	result, err := app.createCursor([]string{"$id", "date"})
 	if err != nil {
-		t.Errorf("error %v", err)
+		t.Errorf("create cursor is fail: %v", err)
 	}
 	fmt.Println("result", string(result))
 }
