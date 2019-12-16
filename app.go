@@ -160,6 +160,63 @@ func (app *App) GetUserAgentHeader() string {
 	return app.userAgentHeader
 }
 
+func (app *App) createUrl(api string, body io.Reader, query string) url.URL {
+	var path string
+	if app.GuestSpaceId == 0 {
+		path = fmt.Sprintf("/k/v1/%s.json", api)
+	} else {
+		path = fmt.Sprintf("/k/guest/%d/v1/%s.json", app.GuestSpaceId, api)
+	}
+	u := url.URL{}
+	if body != nil {
+		u = url.URL{
+			Scheme: "https",
+			Host:   app.Domain,
+			Path:   path,
+		}
+	} else {
+		u = url.URL{
+			Scheme:   "https",
+			Host:     app.Domain,
+			Path:     path,
+			RawQuery: query,
+		}
+	}
+	return u
+
+}
+func (app *App) NewRequest(method, url string, body io.Reader, query string) (*http.Request, error) {
+	if len(app.token) == 0 {
+		app.token = base64.StdEncoding.EncodeToString(
+			[]byte(app.User + ":" + app.Password))
+	}
+	u := app.createUrl(url, body, query)
+	req, err := http.NewRequest(method, u.String(), nil)
+	if body != nil {
+		req, err = http.NewRequest(method, u.String(), body)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if app.basicAuth {
+		req.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
+	}
+	if len(app.ApiToken) == 0 {
+		req.Header.Set("X-Cybozu-Authorization", app.token)
+	} else {
+		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
+	}
+	if method != "GET" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	if len(app.GetUserAgentHeader()) != 0 {
+		req.Header.Set("User-Agent", app.userAgentHeader)
+	} else {
+		req.Header.Set("User-Agent", NAME+"/"+VERSION)
+	}
+	return req, nil
+}
 func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, error) {
 	if len(app.token) == 0 {
 		app.token = base64.StdEncoding.EncodeToString(
@@ -190,9 +247,7 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 	} else {
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
-	if method != "GET" {
-		req.Header.Set("Content-Type", "application/json")
-	}
+
 	req.Header.Set("Content-Type", "application/json")
 
 	if len(app.GetUserAgentHeader()) != 0 {
@@ -219,6 +274,7 @@ func (app *App) do(req *http.Request) (*http.Response, error) {
 		resp *http.Response
 		err  error
 	}
+
 	done := make(chan result, 1)
 	go func() {
 		resp, err := app.Client.Do(req)
@@ -372,7 +428,6 @@ func (app *App) GetAllRecords(fields []string) ([]*Record, error) {
 		if len(recs) > 0 {
 			query = fmt.Sprintf("limit 100 offset %v", len(recs))
 		}
-
 		data, _ := json.Marshal(request_body{app.AppId, fields, query})
 		req, err := app.newRequest("GET", "records", bytes.NewReader(data))
 		if err != nil {
@@ -1017,7 +1072,7 @@ func (app *App) createCursor(fields []string) ([]byte, error) {
 	}
 	var data = cursor{App: app.AppId, Fields: fields}
 	jsonData, _ := json.Marshal(data)
-	req, err := app.newRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
+	req, err := app.NewRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
 	if err != nil {
 		return nil, err
 	}
@@ -1040,7 +1095,7 @@ func (app *App) deleteCursor(cursorId string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req, err := app.newRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
+	req, err := app.NewRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
 	if err != nil {
 		return "", err
 	}
@@ -1063,7 +1118,7 @@ func (app *App) getCurSor(idCursor string) ([]byte, error) {
 		Id string `json:"id,string"`
 	}
 
-	req, err := app.newRequest("GET", "records/cursor", nil, "id="+idCursor)
+	req, err := app.NewRequest("GET", "records/cursor", nil, "id="+idCursor)
 	if err != nil {
 		return nil, err
 	}
