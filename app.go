@@ -1072,15 +1072,15 @@ func (app *App) createCursor(fields []string) ([]byte, error) {
 	}
 	var data = cursor{App: app.AppId, Fields: fields}
 	jsonData, _ := json.Marshal(data)
-	req, err := app.NewRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
+	request, err := app.NewRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
 	if err != nil {
 		return nil, err
 	}
-	res, err := app.do(req)
+	response, err := app.do(request)
 	if err != nil {
 		return nil, err
 	}
-	body, err := parseResponse(res)
+	body, err := parseResponse(response)
 	if err != nil {
 		return nil, err
 	}
@@ -1095,16 +1095,16 @@ func (app *App) deleteCursor(cursorId string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	req, err := app.NewRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
+	request, err := app.NewRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
 	if err != nil {
 		return "", err
 	}
-	res, err := app.do(req)
+	response, err := app.do(request)
 	if err != nil {
 		return "", err
 	}
 
-	result, err := parseResponse(res)
+	result, err := parseResponse(response)
 	if err != nil {
 		return "", err
 	}
@@ -1118,15 +1118,15 @@ func (app *App) getCurSor(idCursor string) ([]byte, error) {
 		Id string `json:"id,string"`
 	}
 
-	req, err := app.NewRequest("GET", "records/cursor", nil, "id="+idCursor)
+	request, err := app.NewRequest("GET", "records/cursor", nil, "id="+idCursor)
 	if err != nil {
 		return nil, err
 	}
-	resGetCursor, err := app.do(req)
+	response, err := app.do(request)
 	if err != nil {
 		return nil, err
 	}
-	result, err := parseResponse(resGetCursor)
+	result, err := parseResponse(response)
 	if err != nil {
 		return nil, err
 	}
