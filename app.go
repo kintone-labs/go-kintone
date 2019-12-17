@@ -270,11 +270,9 @@ func (app *App) do(req *http.Request) (*http.Response, error) {
 		resp *http.Response
 		err  error
 	}
-
 	done := make(chan result, 1)
 	go func() {
 		resp, err := app.Client.Do(req)
-
 		done <- result{resp, err}
 	}()
 
@@ -284,7 +282,6 @@ func (app *App) do(req *http.Request) (*http.Response, error) {
 
 	select {
 	case r := <-done:
-
 		return r.resp, r.err
 	case <-time.After(app.Timeout):
 		if canceller, ok := app.Client.Transport.(requestCanceler); ok {
@@ -294,7 +291,6 @@ func (app *App) do(req *http.Request) (*http.Response, error) {
 				r := <-done
 				if r.err == nil {
 					r.resp.Body.Close()
-
 				}
 			}()
 		}
