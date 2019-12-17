@@ -173,10 +173,9 @@ func TestDeleteRecord(t *testing.T) {
 }
 
 func TestGetCursor(t *testing.T) {
-
 	app := newApp(18)
 
-	resultCreateCursor, err := app.createCursor([]string{"$id", "date"})
+	resultCreateCursor, err := app.createCursor([]string{"$id", "date"}, "", 100)
 	if err != nil {
 		t.Errorf("create cursor is fail: %v", err)
 	}
@@ -197,33 +196,42 @@ func TestGetCursor(t *testing.T) {
 	fmt.Println(string(result))
 }
 
+func (app *App) createCursorForTest() string {
+	cursor, err := app.createCursor([]string{"$id", "Status"}, "", 600)
+	if err != nil {
+		fmt.Println("create cursor is fail: ", err)
+	}
+
+	var objMap map[string]*json.RawMessage
+	json.Unmarshal(cursor, &objMap)
+
+	var id string
+	json.Unmarshal(*objMap["id"], &id)
+	return id
+}
+
 func TestDeleteCursor(t *testing.T) {
 	app := newApp(18)
 	if len(app.Password) == 0 {
 		t.Skip()
 	}
-	resultCreateCursor, err := app.createCursor([]string{"$id", "date"})
-	if err != nil {
-		t.Errorf("create cursor is fail: %v", err)
-	}
-	var objMap map[string]*json.RawMessage
-	json.Unmarshal(resultCreateCursor, &objMap)
-	type id string
-	var idCursor id
-	json.Unmarshal(*objMap["id"], &idCursor)
 
-	result, err := app.deleteCursor(string(idCursor))
+	id := app.createCursorForTest()
+	result, err := app.deleteCursor(string(id))
+
 	if err != nil {
 		t.Errorf("delete cursor is fail: %v", err)
 	}
 	fmt.Println(result)
 }
+
 func TestCreateCurSor(t *testing.T) {
+
 	app := newAppWithApiToken(18)
 	if len(app.ApiToken) == 0 {
 		t.Skip()
 	}
-	_, err := app.createCursor([]string{"$id", "date"})
+	_, err := app.createCursor([]string{"$id", "date"}, "", 100)
 	if err != nil {
 		t.Errorf("create cursor is fail: %v", err)
 	}

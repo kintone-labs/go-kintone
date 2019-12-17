@@ -157,11 +157,14 @@ func (app *App) SetUserAgentHeader(userAgentHeader string) {
 
 // GetUserAgentHeader get user-agent header string
 func (app *App) GetUserAgentHeader() string {
-	return app.userAgentHeader
+	if len(app.userAgentHeader) > 0 {
+		return app.userAgentHeader
+	}
+	return NAME + "/" + VERSION
 }
 
 func (app *App) createUrl(api string, query string) url.URL {
-	var path string
+	path := ""
 	if app.GuestSpaceId == 0 {
 		path = fmt.Sprintf("/k/v1/%s.json", api)
 	} else {
@@ -181,38 +184,43 @@ func (app *App) createUrl(api string, query string) url.URL {
 		RawQuery: query,
 	}
 }
-func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
-	if len(app.token) == 0 {
-		app.token = base64.StdEncoding.EncodeToString(
-			[]byte(app.User + ":" + app.Password))
+func (app *App) setAuth(request *http.Request) {
+	if app.basicAuth {
+		request.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
 	}
-	var bodyData io.Reader = nil
+
+	if len(app.ApiToken) > 0 {
+		request.Header.Set("X-Cybozu-API-Token", app.ApiToken)
+	}
+
+	if len(app.User) > 0 && len(app.Password) > 0 {
+		request.Header.Set("X-Cybozu-Authorization", base64.StdEncoding.EncodeToString(
+			[]byte(app.User+":"+app.Password)))
+	}
+}
+
+func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
+	bodyData := io.Reader(nil)
 	if body != nil {
 		bodyData = body
 	}
-	req, err := http.NewRequest(method, url, bodyData)
+
+	request, err := http.NewRequest(method, url, bodyData)
 	if err != nil {
 		return nil, err
 	}
-	if app.basicAuth {
-		req.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
-	}
-	if len(app.ApiToken) == 0 {
-		req.Header.Set("X-Cybozu-Authorization", app.token)
-	} else {
-		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
-	}
+
+	request.Header.Set("User-Agent", app.GetUserAgentHeader())
+
 	if method != "GET" {
-		req.Header.Set("Content-Type", "application/json")
+		request.Header.Set("Content-Type", "application/json")
 	}
 
-	if len(app.GetUserAgentHeader()) != 0 {
-		req.Header.Set("User-Agent", app.userAgentHeader)
-	} else {
-		req.Header.Set("User-Agent", NAME+"/"+VERSION)
-	}
-	return req, nil
+	app.setAuth(request)
+
+	return request, nil
 }
+
 func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, error) {
 	if len(app.token) == 0 {
 		app.token = base64.StdEncoding.EncodeToString(
@@ -244,11 +252,8 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if len(app.GetUserAgentHeader()) != 0 {
-		req.Header.Set("User-Agent", app.userAgentHeader)
-	} else {
-		req.Header.Set("User-Agent", NAME+"/"+VERSION)
-	}
+	req.Header.Set("User-Agent", app.GetUserAgentHeader())
+
 	return req, nil
 }
 
@@ -1053,12 +1058,15 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	return ret, nil
 }
 
-func (app *App) createCursor(fields []string) ([]byte, error) {
+func (app *App) createCursor(fields []string, query string, size uint64) ([]byte, error) {
 	type cursor struct {
 		App    uint64   `json:"app"`
 		Fields []string `json:"fields"`
+		Size   uint64   `json:"size"`
+		Query  string   `json:"query"`
 	}
-	var data = cursor{App: app.AppId, Fields: fields}
+	data := cursor{App: app.AppId, Fields: fields, Size: size, Query: query}
+	fmt.Println("data", data)
 	jsonData, _ := json.Marshal(data)
 	url := app.createUrl("records/cursor", "")
 	request, err := app.NewRequest("POST", url.String(), bytes.NewBuffer(jsonData))
@@ -1066,6 +1074,7 @@ func (app *App) createCursor(fields []string) ([]byte, error) {
 		return nil, err
 	}
 	response, err := app.do(request)
+
 	if err != nil {
 		return nil, err
 	}
