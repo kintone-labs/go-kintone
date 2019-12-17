@@ -173,6 +173,7 @@ func TestDeleteRecord(t *testing.T) {
 }
 
 func TestGetCursor(t *testing.T) {
+
 	app := newApp(18)
 
 	resultCreateCursor, err := app.createCursor([]string{"$id", "date"})
@@ -226,7 +227,6 @@ func TestCreateCurSor(t *testing.T) {
 	if err != nil {
 		t.Errorf("create cursor is fail: %v", err)
 	}
-
 }
 
 func TestFields(t *testing.T) {

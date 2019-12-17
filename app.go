@@ -160,41 +160,37 @@ func (app *App) GetUserAgentHeader() string {
 	return app.userAgentHeader
 }
 
-func (app *App) createUrl(api string, body io.Reader, query string) url.URL {
+func (app *App) createUrl(api string, query string) url.URL {
 	var path string
 	if app.GuestSpaceId == 0 {
 		path = fmt.Sprintf("/k/v1/%s.json", api)
 	} else {
 		path = fmt.Sprintf("/k/guest/%d/v1/%s.json", app.GuestSpaceId, api)
 	}
-	u := url.URL{}
-	if body != nil {
-		u = url.URL{
+	if query == "" {
+		return url.URL{
 			Scheme: "https",
 			Host:   app.Domain,
 			Path:   path,
 		}
-	} else {
-		u = url.URL{
-			Scheme:   "https",
-			Host:     app.Domain,
-			Path:     path,
-			RawQuery: query,
-		}
 	}
-	return u
-
+	return url.URL{
+		Scheme:   "https",
+		Host:     app.Domain,
+		Path:     path,
+		RawQuery: query,
+	}
 }
-func (app *App) NewRequest(method, url string, body io.Reader, query string) (*http.Request, error) {
+func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
 	if len(app.token) == 0 {
 		app.token = base64.StdEncoding.EncodeToString(
 			[]byte(app.User + ":" + app.Password))
 	}
-	u := app.createUrl(url, body, query)
-	req, err := http.NewRequest(method, u.String(), nil)
+	var bodyData io.Reader = nil
 	if body != nil {
-		req, err = http.NewRequest(method, u.String(), body)
+		bodyData = body
 	}
+	req, err := http.NewRequest(method, url, bodyData)
 	if err != nil {
 		return nil, err
 	}
@@ -1039,8 +1035,6 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		return nil, err
 	}
 	resp, err := app.do(req)
-	fmt.Println(resp)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1072,7 +1066,8 @@ func (app *App) createCursor(fields []string) ([]byte, error) {
 	}
 	var data = cursor{App: app.AppId, Fields: fields}
 	jsonData, _ := json.Marshal(data)
-	request, err := app.NewRequest("POST", "records/cursor", bytes.NewBuffer(jsonData), "")
+	url := app.createUrl("records/cursor", "")
+	request, err := app.NewRequest("POST", url.String(), bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, err
 	}
@@ -1095,7 +1090,8 @@ func (app *App) deleteCursor(cursorId string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	request, err := app.NewRequest("DELETE", "records/cursor", bytes.NewBuffer(data), "")
+	url := app.createUrl("records/cursor", "")
+	request, err := app.NewRequest("DELETE", url.String(), bytes.NewBuffer(data))
 	if err != nil {
 		return "", err
 	}
@@ -1117,8 +1113,8 @@ func (app *App) getCurSor(idCursor string) ([]byte, error) {
 	type requestBody struct {
 		Id string `json:"id,string"`
 	}
-
-	request, err := app.NewRequest("GET", "records/cursor", nil, "id="+idCursor)
+	url := app.createUrl("records/cursor", "id="+idCursor)
+	request, err := app.NewRequest("GET", url.String(), nil)
 	if err != nil {
 		return nil, err
 	}
