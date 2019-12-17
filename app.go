@@ -243,9 +243,7 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 	} else {
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
-
 	req.Header.Set("Content-Type", "application/json")
-
 	if len(app.GetUserAgentHeader()) != 0 {
 		req.Header.Set("User-Agent", app.userAgentHeader)
 	} else {
