@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	NAME            = "kintone-go-SDK"
+	NAME            = "go-kintone"
 	VERSION         = "0.1.2"
 	DEFAULT_TIMEOUT = time.Second * 600 // Default value for App.Timeout
 )
@@ -157,10 +157,11 @@ func (app *App) SetUserAgentHeader(userAgentHeader string) {
 
 // GetUserAgentHeader get user-agent header string
 func (app *App) GetUserAgentHeader() string {
+	goUserAgent := NAME + "/" + VERSION
 	if len(app.userAgentHeader) > 0 {
-		return app.userAgentHeader
+		return goUserAgent + " " + app.userAgentHeader
 	}
-	return NAME + "/" + VERSION
+	return goUserAgent
 }
 
 func (app *App) createUrl(api string, query string) url.URL {
