@@ -175,17 +175,9 @@ func TestDeleteRecord(t *testing.T) {
 func TestGetCursor(t *testing.T) {
 	app := newApp(18)
 
-	resultCreateCursor, err := app.createCursor([]string{"$id", "date"}, "", 100)
-	if err != nil {
-		t.Errorf("create cursor is fail: %v", err)
-	}
-	var objMap map[string]*json.RawMessage
-	json.Unmarshal(resultCreateCursor, &objMap)
-	type id string
-	var idCursor id
-	json.Unmarshal(*objMap["id"], &idCursor)
+	id := app.createCursorForTest()
+	result, err := app.getCurSor(string(id))
 
-	result, err := app.getCurSor(string(idCursor))
 	if len(app.Password) == 0 {
 		t.Skip()
 	}
@@ -199,7 +191,7 @@ func TestGetCursor(t *testing.T) {
 func (app *App) createCursorForTest() string {
 	cursor, err := app.createCursor([]string{"$id", "Status"}, "", 600)
 	if err != nil {
-		fmt.Println("create cursor is fail: ", err)
+		fmt.Println("createCursorForTest failed: ", err)
 	}
 
 	var objMap map[string]*json.RawMessage

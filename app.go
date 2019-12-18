@@ -164,25 +164,21 @@ func (app *App) GetUserAgentHeader() string {
 }
 
 func (app *App) createUrl(api string, query string) url.URL {
-	path := ""
-	if app.GuestSpaceId == 0 {
-		path = fmt.Sprintf("/k/v1/%s.json", api)
-	} else {
+	path := fmt.Sprintf("/k/v1/%s.json", api)
+	if app.GuestSpaceId > 0 {
 		path = fmt.Sprintf("/k/guest/%d/v1/%s.json", app.GuestSpaceId, api)
 	}
-	if query == "" {
-		return url.URL{
-			Scheme: "https",
-			Host:   app.Domain,
-			Path:   path,
-		}
+
+	resultUrl := url.URL{
+		Scheme: "https",
+		Host:   app.Domain,
+		Path:   path,
 	}
-	return url.URL{
-		Scheme:   "https",
-		Host:     app.Domain,
-		Path:     path,
-		RawQuery: query,
+
+	if len(query) > 0 {
+		resultUrl.RawQuery = query
 	}
+	return resultUrl
 }
 func (app *App) setAuth(request *http.Request) {
 	if app.basicAuth {
@@ -1066,7 +1062,6 @@ func (app *App) createCursor(fields []string, query string, size uint64) ([]byte
 		Query  string   `json:"query"`
 	}
 	data := cursor{App: app.AppId, Fields: fields, Size: size, Query: query}
-	fmt.Println("data", data)
 	jsonData, _ := json.Marshal(data)
 	url := app.createUrl("records/cursor", "")
 	request, err := app.NewRequest("POST", url.String(), bytes.NewBuffer(jsonData))
@@ -1085,11 +1080,11 @@ func (app *App) createCursor(fields []string, query string, size uint64) ([]byte
 	return body, nil
 }
 
-func (app *App) deleteCursor(cursorId string) (string, error) {
+func (app *App) deleteCursor(id string) (string, error) {
 	type requestBody struct {
 		Id string `json:"id"`
 	}
-	data, err := json.Marshal(requestBody{Id: cursorId})
+	data, err := json.Marshal(requestBody{Id: id})
 	if err != nil {
 		return "", err
 	}
@@ -1112,11 +1107,11 @@ func (app *App) deleteCursor(cursorId string) (string, error) {
 	return "delete success", nil
 }
 
-func (app *App) getCurSor(idCursor string) ([]byte, error) {
+func (app *App) getCurSor(id string) ([]byte, error) {
 	type requestBody struct {
 		Id string `json:"id,string"`
 	}
-	url := app.createUrl("records/cursor", "id="+idCursor)
+	url := app.createUrl("records/cursor", "id="+id)
 	request, err := app.NewRequest("GET", url.String(), nil)
 	if err != nil {
 		return nil, err
