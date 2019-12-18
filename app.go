@@ -1069,7 +1069,6 @@ func (app *App) createCursor(fields []string, query string, size uint64) ([]byte
 		return nil, err
 	}
 	response, err := app.do(request)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1080,34 +1079,35 @@ func (app *App) createCursor(fields []string, query string, size uint64) ([]byte
 	return body, nil
 }
 
-func (app *App) deleteCursor(id string) (string, error) {
+func (app *App) deleteCursor(id string) error {
 	type requestBody struct {
 		Id string `json:"id"`
 	}
 	data, err := json.Marshal(requestBody{Id: id})
 	if err != nil {
-		return "", err
+		return err
 	}
+
 	url := app.createUrl("records/cursor", "")
 	request, err := app.NewRequest("DELETE", url.String(), bytes.NewBuffer(data))
 	if err != nil {
-		return "", err
+		return err
 	}
+
 	response, err := app.do(request)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	result, err := parseResponse(response)
+	_, err = parseResponse(response)
 	if err != nil {
-		return "", err
+		return err
 	}
-	if result != nil {
-	}
-	return "delete success", nil
+
+	return nil
 }
 
-func (app *App) getCurSor(id string) ([]byte, error) {
+func (app *App) getCursor(id string) ([]byte, error) {
 	type requestBody struct {
 		Id string `json:"id,string"`
 	}

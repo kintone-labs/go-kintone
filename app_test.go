@@ -175,12 +175,13 @@ func TestDeleteRecord(t *testing.T) {
 func TestGetCursor(t *testing.T) {
 	app := newApp(18)
 
-	id := app.createCursorForTest()
-	result, err := app.getCurSor(string(id))
-
 	if len(app.Password) == 0 {
 		t.Skip()
 	}
+
+	id := app.createCursorForTest()
+	result, err := app.getCursor(string(id))
+
 	if err != nil {
 		t.Errorf("get cursor is fail: %v", err)
 	}
@@ -209,23 +210,21 @@ func TestDeleteCursor(t *testing.T) {
 	}
 
 	id := app.createCursorForTest()
-	result, err := app.deleteCursor(string(id))
+	err := app.deleteCursor(string(id))
 
 	if err != nil {
-		t.Errorf("delete cursor is fail: %v", err)
+		t.Errorf("TestDeleteCursor is failed: %v", err)
 	}
-	fmt.Println(result)
 }
 
 func TestCreateCurSor(t *testing.T) {
-
 	app := newAppWithApiToken(18)
 	if len(app.ApiToken) == 0 {
 		t.Skip()
 	}
 	_, err := app.createCursor([]string{"$id", "date"}, "", 100)
 	if err != nil {
-		t.Errorf("create cursor is fail: %v", err)
+		t.Errorf("TestCreateCurSor is failed: %v", err)
 	}
 }
 
