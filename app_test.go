@@ -183,14 +183,14 @@ func TestGetCursor(t *testing.T) {
 	result, err := app.getCursor(string(id))
 
 	if err != nil {
-		t.Errorf("get cursor is fail: %v", err)
+		t.Errorf("TestGetCursor is failed: %v", err)
 	}
 
 	fmt.Println(string(result))
 }
 
 func (app *App) createCursorForTest() string {
-	cursor, err := app.createCursor([]string{"$id", "Status"}, "", 600)
+	cursor, err := app.createCursor([]string{"$id", "Status"}, "", 400)
 	if err != nil {
 		fmt.Println("createCursorForTest failed: ", err)
 	}

@@ -1108,9 +1108,6 @@ func (app *App) deleteCursor(id string) error {
 }
 
 func (app *App) getCursor(id string) ([]byte, error) {
-	type requestBody struct {
-		Id string `json:"id,string"`
-	}
 	url := app.createUrl("records/cursor", "id="+id)
 	request, err := app.NewRequest("GET", url.String(), nil)
 	if err != nil {
