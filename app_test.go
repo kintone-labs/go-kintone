@@ -217,7 +217,7 @@ func TestDeleteCursor(t *testing.T) {
 	}
 }
 
-func TestCreateCurSor(t *testing.T) {
+func TestCreateCursor(t *testing.T) {
 	app := newAppWithApiToken(18)
 	if len(app.ApiToken) == 0 {
 		t.Skip()
