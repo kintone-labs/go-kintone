@@ -6,7 +6,6 @@ package kintone
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -172,35 +171,28 @@ func TestDeleteRecord(t *testing.T) {
 	}
 }
 
-func TestGetCursor(t *testing.T) {
+func TestGetRecordsByCursor(t *testing.T) {
 	app := newApp(18)
 
 	if len(app.Password) == 0 {
 		t.Skip()
 	}
 
-	id := app.createCursorForTest()
-	result, err := app.getCursor(string(id))
+	cursor := app.createCursorForTest()
+	_, err := app.GetRecordsByCursor(string(cursor.Id))
 
 	if err != nil {
 		t.Errorf("TestGetCursor is failed: %v", err)
 	}
-
-	fmt.Println(string(result))
 }
 
-func (app *App) createCursorForTest() string {
-	cursor, err := app.createCursor([]string{"$id", "Status"}, "", 400)
+func (app *App) createCursorForTest() *Cursor {
+	cursor, err := app.CreateCursor([]string{"$id", "Status"}, "", 400)
+	fmt.Println("cursor", cursor)
 	if err != nil {
 		fmt.Println("createCursorForTest failed: ", err)
 	}
-
-	var objMap map[string]*json.RawMessage
-	json.Unmarshal(cursor, &objMap)
-
-	var id string
-	json.Unmarshal(*objMap["id"], &id)
-	return id
+	return cursor
 }
 
 func TestDeleteCursor(t *testing.T) {
@@ -209,8 +201,9 @@ func TestDeleteCursor(t *testing.T) {
 		t.Skip()
 	}
 
-	id := app.createCursorForTest()
-	err := app.deleteCursor(string(id))
+	cursor := app.createCursorForTest()
+	fmt.Println("cursor", cursor)
+	err := app.DeleteCursor(string(cursor.Id))
 
 	if err != nil {
 		t.Errorf("TestDeleteCursor is failed: %v", err)
@@ -218,11 +211,11 @@ func TestDeleteCursor(t *testing.T) {
 }
 
 func TestCreateCursor(t *testing.T) {
-	app := newAppWithApiToken(18)
-	if len(app.ApiToken) == 0 {
+	app := newApp(18)
+	if len(app.Password) == 0 {
 		t.Skip()
 	}
-	_, err := app.createCursor([]string{"$id", "date"}, "", 100)
+	_, err := app.CreateCursor([]string{"$id", "date"}, "", 100)
 	if err != nil {
 		t.Errorf("TestCreateCurSor is failed: %v", err)
 	}

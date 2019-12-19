@@ -1055,7 +1055,8 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	return ret, nil
 }
 
-func (app *App) createCursor(fields []string, query string, size uint64) ([]byte, error) {
+//CreateCursor return the meta data of the Cursor in this application
+func (app *App) CreateCursor(fields []string, query string, size uint64) (*Cursor, error) {
 	type cursor struct {
 		App    uint64   `json:"app"`
 		Fields []string `json:"fields"`
@@ -1077,10 +1078,12 @@ func (app *App) createCursor(fields []string, query string, size uint64) ([]byte
 	if err != nil {
 		return nil, err
 	}
-	return body, nil
+	result, err := decodeCursor(body)
+	return result, nil
 }
 
-func (app *App) deleteCursor(id string) error {
+//Delete a cursorID
+func (app *App) DeleteCursor(id string) error {
 	type requestBody struct {
 		Id string `json:"id"`
 	}
@@ -1108,7 +1111,9 @@ func (app *App) deleteCursor(id string) error {
 	return nil
 }
 
-func (app *App) getCursor(id string) ([]byte, error) {
+//Using Cursor Id to get all records
+//GetRecordsByCursor return the meta data of the Record in this application
+func (app *App) GetRecordsByCursor(id string) ([]*Record, error) {
 	url := app.createUrl("records/cursor", "id="+id)
 	request, err := app.NewRequest("GET", url.String(), nil)
 	if err != nil {
@@ -1118,9 +1123,10 @@ func (app *App) getCursor(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	result, err := parseResponse(response)
+	data, err := parseResponse(response)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	record, _ := DecodeRecords(data)
+	return record, nil
 }
