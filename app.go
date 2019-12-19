@@ -124,7 +124,7 @@ type App struct {
 	basicAuth         bool          // true to use Basic Authentication.
 	basicAuthUser     string        // User name for Basic Authentication.
 	basicAuthPassword string        // Password for Basic Authentication.
-	userAgentHeader   string        // User-agent request header string
+	extUserAgent      string        // User-agent request header string
 }
 
 // SetBasicAuth enables use of HTTP basic authentication for access
@@ -152,16 +152,16 @@ func (app *App) GetBasicAuthPassword() string {
 
 // SetUserAgentHeader set custom user-agent header for http request
 func (app *App) SetUserAgentHeader(userAgentHeader string) {
-	app.userAgentHeader = userAgentHeader
+	app.extUserAgent = userAgentHeader
 }
 
 // GetUserAgentHeader get user-agent header string
 func (app *App) GetUserAgentHeader() string {
-	goUserAgent := NAME + "/" + VERSION
-	if len(app.userAgentHeader) > 0 {
-		return goUserAgent + " " + app.userAgentHeader
+	userAgent := NAME + "/" + VERSION
+	if len(app.extUserAgent) > 0 {
+		return userAgent + " " + app.extUserAgent
 	}
-	return goUserAgent
+	return userAgent
 }
 
 func (app *App) createUrl(api string, query string) url.URL {
