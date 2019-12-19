@@ -196,6 +196,7 @@ func (app *App) setAuth(request *http.Request) {
 	}
 }
 
+//NewRequest create a request connect to kintone api.
 func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
 	bodyData := io.Reader(nil)
 	if body != nil {
@@ -1082,7 +1083,7 @@ func (app *App) CreateCursor(fields []string, query string, size uint64) (*Curso
 	return result, nil
 }
 
-//Delete cursor
+// DeleteCursor - Delete cursor by id
 func (app *App) DeleteCursor(id string) error {
 	type requestBody struct {
 		Id string `json:"id"`
