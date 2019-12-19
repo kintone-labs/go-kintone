@@ -179,11 +179,13 @@ func TestGetRecordsByCursor(t *testing.T) {
 	}
 
 	cursor := app.createCursorForTest()
-	_, err := app.GetRecordsByCursor(string(cursor.Id))
+	record, err := app.GetRecordsByCursor(string(cursor.Id))
 
 	if err != nil {
 		t.Errorf("TestGetCursor is failed: %v", err)
 	}
+	fmt.Println(record)
+
 }
 
 func (app *App) createCursorForTest() *Cursor {

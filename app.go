@@ -1082,7 +1082,7 @@ func (app *App) CreateCursor(fields []string, query string, size uint64) (*Curso
 	return result, nil
 }
 
-//Delete a cursorID
+//Delete cursor
 func (app *App) DeleteCursor(id string) error {
 	type requestBody struct {
 		Id string `json:"id"`

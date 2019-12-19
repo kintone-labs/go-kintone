@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 )
 
+//object Cursor structure
 type Cursor struct {
 	Id         string `json:"id"`
 	TotalCount string `json:"totalCount"`
