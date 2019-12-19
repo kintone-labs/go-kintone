@@ -10,6 +10,7 @@ type Cursor struct {
 	TotalCount string `json:"totalCount"`
 }
 
+//decode cursor
 func decodeCursor(b []byte) (c *Cursor, err error) {
 	err = json.Unmarshal(b, &c)
 	if err != nil {
