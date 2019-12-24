@@ -22,7 +22,7 @@ func decodeCursor(b []byte) (c *Cursor, err error) {
 	}
 	return c, nil
 }
-func decodeRecordCursor(b []byte) (rc *RecordCursor, err error) {
+func DecodeRecordCursor(b []byte) (rc *RecordCursor, err error) {
 	var t struct {
 		next bool
 	}

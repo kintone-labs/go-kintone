@@ -1128,6 +1128,6 @@ func (app *App) GetRecordsByCursor(id string) (*RecordCursor, error) {
 	if err != nil {
 		return nil, err
 	}
-	record, _ := decodeRecordCursor(data)
+	record, _ := DecodeRecordCursor(data)
 	return record, nil
 }
