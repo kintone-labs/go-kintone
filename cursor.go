@@ -9,7 +9,7 @@ type Cursor struct {
 	Id         string `json:"id"`
 	TotalCount string `json:"totalCount"`
 }
-type RecordCursor struct {
+type GetRecordsCursorResponse struct {
 	Records []*Record `json:"records"`
 	Next    bool      `json:"next"`
 }
@@ -22,7 +22,7 @@ func decodeCursor(b []byte) (c *Cursor, err error) {
 	}
 	return c, nil
 }
-func DecodeRecordCursor(b []byte) (rc *RecordCursor, err error) {
+func DecodeGetRecordsCursorResponse(b []byte) (rc *GetRecordsCursorResponse, err error) {
 	var t struct {
 		next bool
 	}
@@ -34,6 +34,6 @@ func DecodeRecordCursor(b []byte) (rc *RecordCursor, err error) {
 	if err != nil {
 		return nil, err
 	}
-	records := &RecordCursor{Records: listRecord, Next: t.next}
-	return records, nil
+	getRecordsCursorResponse := &GetRecordsCursorResponse{Records: listRecord, Next: t.next}
+	return getRecordsCursorResponse, nil
 }
