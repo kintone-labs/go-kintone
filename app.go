@@ -1114,7 +1114,7 @@ func (app *App) DeleteCursor(id string) error {
 
 //Using Cursor Id to get all records
 //GetRecordsByCursor return the meta data of the Record in this application
-func (app *App) GetRecordsByCursor(id string) ([]*Record, error) {
+func (app *App) GetRecordsByCursor(id string) (*RecordCursor, error) {
 	url := app.createUrl("records/cursor", "id="+id)
 	request, err := app.NewRequest("GET", url.String(), nil)
 	if err != nil {
@@ -1128,6 +1128,6 @@ func (app *App) GetRecordsByCursor(id string) ([]*Record, error) {
 	if err != nil {
 		return nil, err
 	}
-	record, _ := DecodeRecords(data)
+	record, _ := decodeRecordCursor(data)
 	return record, nil
 }
