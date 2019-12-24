@@ -23,20 +23,21 @@ type Record struct {
 	id       uint64
 	revision int64
 	Fields   map[string]interface{}
+	next     bool
 }
 
 // NewRecord creates an instance of Record.
 //
 // The revision number is initialized to -1.
 func NewRecord(fields map[string]interface{}) *Record {
-	return &Record{0, -1, fields}
+	return &Record{0, -1, fields, false}
 }
 
 // NewRecordWithId creates using an existing record id.
 //
 // The revision number is initialized to -1.
 func NewRecordWithId(id uint64, fields map[string]interface{}) *Record {
-	return &Record{id, -1, fields}
+	return &Record{id, -1, fields, false}
 }
 
 // MarshalJSON marshals field data of a record into JSON.
@@ -49,6 +50,11 @@ func (rec Record) MarshalJSON() ([]byte, error) {
 // A record number is unique within an application.
 func (rec Record) Id() uint64 {
 	return rec.id
+}
+
+// Next return the status the record
+func (rec Record) Next() bool {
+	return rec.next
 }
 
 // Revision returns the record revision number.
@@ -125,9 +131,9 @@ type recordData map[string]struct {
 	Value interface{} `json:"value"`
 }
 
-func decodeRecordData(data recordData) (*Record, error) {
+func decodeRecordData(data recordData, next bool) (*Record, error) {
 	fields := make(map[string]interface{})
-	rec := &Record{0, -1, fields}
+	rec := &Record{0, -1, fields, next}
 	for key, v := range data {
 		switch v.Type {
 		case FT_SINGLE_LINE_TEXT:
@@ -284,7 +290,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				if err != nil {
 					return nil, err
 				}
-				r, err := decodeRecordData(recordData(rd))
+				r, err := decodeRecordData(recordData(rd), false)
 				if err != nil {
 					return nil, err
 				}
@@ -319,14 +325,16 @@ func decodeRecordData(data recordData) (*Record, error) {
 func DecodeRecords(b []byte) ([]*Record, error) {
 	var t struct {
 		Records []recordData `json:"records"`
+		Next    bool         `json:"next"`
 	}
 	err := json.Unmarshal(b, &t)
 	if err != nil {
 		return nil, errors.New("Invalid JSON format")
 	}
+
 	rec_list := make([]*Record, len(t.Records))
 	for i, rd := range t.Records {
-		r, err := decodeRecordData(rd)
+		r, err := decodeRecordData(rd, t.Next)
 		if err != nil {
 			return nil, err
 		}
@@ -344,7 +352,7 @@ func DecodeRecord(b []byte) (*Record, error) {
 	if err != nil {
 		return nil, errors.New("Invalid JSON format")
 	}
-	rec, err := decodeRecordData(t.RecordData)
+	rec, err := decodeRecordData(t.RecordData, false)
 	if err != nil {
 		return nil, err
 	}
