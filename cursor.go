@@ -24,7 +24,7 @@ func decodeCursor(b []byte) (c *Cursor, err error) {
 }
 func DecodeGetRecordsCursorResponse(b []byte) (rc *GetRecordsCursorResponse, err error) {
 	var t struct {
-		next bool
+		Next bool `json:"next"`
 	}
 	err = json.Unmarshal(b, &t)
 	if err != nil {
@@ -34,6 +34,6 @@ func DecodeGetRecordsCursorResponse(b []byte) (rc *GetRecordsCursorResponse, err
 	if err != nil {
 		return nil, err
 	}
-	getRecordsCursorResponse := &GetRecordsCursorResponse{Records: listRecord, Next: t.next}
+	getRecordsCursorResponse := &GetRecordsCursorResponse{Records: listRecord, Next: t.Next}
 	return getRecordsCursorResponse, nil
 }
