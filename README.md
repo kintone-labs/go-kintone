@@ -13,7 +13,7 @@ to access [kintone][] with its official REST API ([en][APIen], [ja][APIja]).
 
 ## Version
 
-0.2.0
+0.3.0
 
 ## License
 
