@@ -324,6 +324,7 @@ func DecodeRecords(b []byte) ([]*Record, error) {
 	if err != nil {
 		return nil, errors.New("Invalid JSON format")
 	}
+
 	rec_list := make([]*Record, len(t.Records))
 	for i, rd := range t.Records {
 		r, err := decodeRecordData(rd)

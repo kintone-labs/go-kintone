@@ -6,35 +6,40 @@ package kintone
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
-	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
+const KINTONE_DOMAIN = "YOUR_DOMAIN"
+const KINTONE_USER = "YOUR_KINTONE_USER"
+const KINTONE_PASSWORD = "YOUR_KINTONE_PASSWORD"
+const KINTONE_API_TOKEN = "YOUR_API_TOKEN"
+
 func newApp(appID uint64) *App {
 	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		User:     os.Getenv("KINTONE_USER"),
-		Password: os.Getenv("KINTONE_PASSWORD"),
+		Domain:   KINTONE_DOMAIN,
+		User:     KINTONE_USER,
+		Password: KINTONE_PASSWORD,
 		AppId:    appID,
 	}
 }
 
 func newAppWithApiToken(appId uint64) *App {
 	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		ApiToken: os.Getenv("KINTONE_API_TOKEN"),
+		Domain:   KINTONE_DOMAIN,
+		ApiToken: KINTONE_API_TOKEN,
 		AppId:    appId,
 	}
 }
 
 func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	return &App{
-		Domain:       os.Getenv("KINTONE_DOMAIN"),
-		User:         os.Getenv("KINTONE_USER"),
-		Password:     os.Getenv("KINTONE_PASSWORD"),
+		Domain:       KINTONE_DOMAIN,
+		User:         KINTONE_USER,
+		Password:     KINTONE_PASSWORD,
 		AppId:        appId,
 		GuestSpaceId: guestSpaceId,
 	}
@@ -82,7 +87,6 @@ func TestGetRecord(t *testing.T) {
 		t.Log(len(recs))
 	}
 }
-
 func TestAddRecord(t *testing.T) {
 	a := newApp(9004)
 	if len(a.Password) == 0 {
@@ -168,6 +172,58 @@ func TestDeleteRecord(t *testing.T) {
 	ids := []uint64{6, 7}
 	if err := a.DeleteRecords(ids); err != nil {
 		t.Error("DeleteRecords failed", err)
+	}
+}
+
+func TestGetRecordsByCursor(t *testing.T) {
+	app := newApp(18)
+
+	if len(app.Password) == 0 {
+		t.Skip()
+	}
+
+	cursor := app.createCursorForTest()
+	record, err := app.GetRecordsByCursor(string(cursor.Id))
+
+	if err != nil {
+		t.Errorf("TestGetCursor is failed: %v", err)
+	}
+	fmt.Println(record)
+
+}
+
+func (app *App) createCursorForTest() *Cursor {
+	cursor, err := app.CreateCursor([]string{"$id", "Status"}, "", 400)
+	fmt.Println("cursor", cursor)
+	if err != nil {
+		fmt.Println("createCursorForTest failed: ", err)
+	}
+	return cursor
+}
+
+func TestDeleteCursor(t *testing.T) {
+	app := newApp(18)
+	if len(app.Password) == 0 {
+		t.Skip()
+	}
+
+	cursor := app.createCursorForTest()
+	fmt.Println("cursor", cursor)
+	err := app.DeleteCursor(string(cursor.Id))
+
+	if err != nil {
+		t.Errorf("TestDeleteCursor is failed: %v", err)
+	}
+}
+
+func TestCreateCursor(t *testing.T) {
+	app := newApp(18)
+	if len(app.Password) == 0 {
+		t.Skip()
+	}
+	_, err := app.CreateCursor([]string{"$id", "date"}, "", 100)
+	if err != nil {
+		t.Errorf("TestCreateCurSor is failed: %v", err)
 	}
 }
 
