@@ -82,15 +82,31 @@ func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 }
 
 func TestGetRecord(t *testing.T) {
-	a := newApp(4799)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
 
-	if rec, err := a.GetRecord(116); err != nil {
+	json := `{
+    "record": {
+			"Updated_by": {
+				"type": "MODIFIER",
+				"value": {
+						"code": "Administrator",
+						"name": "Administrator"
+				}
+		},
+        "$id": {
+            "type": "__ID__",
+            "value": "1"
+        }
+    }
+}
+`
+	ts, _ := createResponseLocalTestServer(json)
+	defer ts.Close()
+	a := newAppForTest("127.0.0.1:8088", "test", "test", 2)
+
+	if rec, err := a.GetRecord(1); err != nil {
 		t.Error(err)
 	} else {
-		if rec.Id() != 116 {
+		if rec.Id() != 1 {
 			t.Errorf("Unexpected Id: %d", rec.Id())
 		}
 		for _, f := range rec.Fields {
