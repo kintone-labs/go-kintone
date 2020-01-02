@@ -55,6 +55,7 @@ func createResponseLocalTestServer(data string) (*httptest.Server, error) {
 	return ts, nil
 }
 
+	ts.Listener = l
 func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	return &App{
 		Domain:       os.Getenv("KINTONE_DOMAIN"),
