@@ -55,7 +55,22 @@ func createResponseLocalTestServer(data string) (*httptest.Server, error) {
 	return ts, nil
 }
 
+func NewLocalHTTPSTestServer(handler http.Handler) (*httptest.Server, error) {
+	ts := httptest.NewUnstartedServer(handler)
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	l, err := net.Listen("tcp", "localhost:8088")
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	ts.Listener.Close()
 	ts.Listener = l
+	ts.StartTLS()
+
+	return ts, nil
+}
+
 func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	return &App{
 		Domain:       os.Getenv("KINTONE_DOMAIN"),
