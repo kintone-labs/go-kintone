@@ -101,7 +101,7 @@ func TestGetRecord(t *testing.T) {
 `
 	ts, _ := createResponseLocalTestServer(json)
 	defer ts.Close()
-	a := newAppForTest("127.0.0.1:8088", "test", "test", 2)
+	a := newAppForTest()
 
 	if rec, err := a.GetRecord(1); err != nil {
 		t.Error(err)
@@ -138,6 +138,7 @@ func TestGetRecord(t *testing.T) {
 	} else {
 		t.Log(len(recs))
 	}
+
 }
 
 func TestAddRecord(t *testing.T) {
@@ -316,7 +317,7 @@ func TestGetRecordComments(t *testing.T) {
 	`
 	ts, _ := createResponseLocalTestServer(json)
 	defer ts.Close()
-	a := newAppForTest("127.0.0.1:8088", "test", "test", 2)
+	a := newAppForTest()
 	var offset uint64 = 0
 	var limit uint64 = 10
 	if rec, err := a.GetRecordComments(1, "asc", offset, limit); err != nil {
