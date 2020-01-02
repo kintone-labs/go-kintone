@@ -252,14 +252,62 @@ func TestGuestSpace(t *testing.T) {
 }
 
 func TestGetRecordComments(t *testing.T) {
-	a := newApp(13)
-	var offset uint64 = 5
+	json := `
+	{
+		"comments": [
+        {
+            "id": "3",
+            "text": "user14 Thank you! Looks great.",
+            "createdAt": "2016-05-09T18:29:05Z",
+            "creator": {
+                "code": "user13",
+                "name": "user13"
+            },
+            "mentions": [
+                {
+                    "code": "user14",
+                    "type": "USER"
+                }
+            ]
+        },
+        {
+            "id": "2",
+            "text": "user13 Global Sales APAC Taskforce \nHere is today's report.",
+            "createdAt": "2016-05-09T18:27:54Z",
+            "creator": {
+                "code": "user14",
+                "name": "user14"
+            },
+            "mentions": [
+                {
+                    "code": "user13",
+                    "type": "USER"
+                },
+                {
+                    "code": "Global Sales_1BNZeQ",
+                    "type": "ORGANIZATION"
+                },
+                {
+                    "code": "APAC Taskforce_DJrvzu",
+                    "type": "GROUP"
+                }
+            ]
+        }
+    ],
+    "older": false,
+    "newer": false
+	}
+	`
+	ts, _ := createResponseLocalTestServer(json)
+	defer ts.Close()
+	a := newAppForTest("127.0.0.1:8088", "test", "test", 2)
+	var offset uint64 = 0
 	var limit uint64 = 10
-	if rec, err := a.GetRecordComments(3, "asc", offset, limit); err != nil {
+	if rec, err := a.GetRecordComments(1, "asc", offset, limit); err != nil {
 		t.Error(err)
 	} else {
-		if !strings.Contains(rec[0].Id, "6") {
-			t.Errorf("the first comment id mismatch. expected is 6 but actual %v", rec[0].Id)
+		if !strings.Contains(rec[0].Id, "3") {
+			t.Errorf("the first comment id mismatch. expected is 3 but actual %v", rec[0].Id)
 		}
 	}
 }
