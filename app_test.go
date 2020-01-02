@@ -44,6 +44,17 @@ func newAppWithApiToken(appId uint64) *App {
 	}
 }
 
+func createResponseLocalTestServer(data string) (*httptest.Server, error) {
+	ts, err := NewLocalHTTPSTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, data)
+	}))
+	if err != nil {
+		return nil, err
+	}
+
+	return ts, nil
+}
+
 func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	return &App{
 		Domain:       os.Getenv("KINTONE_DOMAIN"),
