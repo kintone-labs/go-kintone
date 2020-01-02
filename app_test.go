@@ -6,12 +6,26 @@ package kintone
 
 import (
 	"bytes"
+	"crypto/tls"
+	"fmt"
 	"io/ioutil"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 	"time"
 )
+
+func newAppForTest(domain string, user string, password string, appID uint64) *App {
+	return &App{
+		Domain:   domain,
+		User:     user,
+		Password: password,
+		AppId:    appID,
+	}
+}
 
 func newApp(appID uint64) *App {
 	return &App{
