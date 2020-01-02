@@ -18,12 +18,12 @@ import (
 	"time"
 )
 
-func newAppForTest(domain string, user string, password string, appID uint64) *App {
+func newAppForTest() *App {
 	return &App{
-		Domain:   domain,
-		User:     user,
-		Password: password,
-		AppId:    appID,
+		Domain:   "127.0.0.1:8088",
+		User:     "test",
+		Password: "test",
+		AppId:    1,
 	}
 }
 
