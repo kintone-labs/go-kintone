@@ -98,6 +98,9 @@ func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
 	} else if r.Method == "PUT" {
 		testData := GetTestDataUpdateRecordByKey()
 		fmt.Fprint(response, testData.output)
+	} else if r.Method == "POST" {
+		testData := GetTestDataAddRecord()
+		fmt.Fprint(response, testData.output)
 	}
 
 }
@@ -108,6 +111,9 @@ func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "DELETE" {
 		testData := GetTestDataDeleteRecords()
+		fmt.Fprint(response, testData.output)
+	} else if r.Method == "POST" {
+		testData := GetTestDataAddRecords()
 		fmt.Fprint(response, testData.output)
 	}
 
@@ -176,7 +182,6 @@ func TestAddRecord(t *testing.T) {
 	if err != nil {
 		t.Error("AddRecord failed", rec)
 	}
-
 	recs := []*Record{
 		NewRecord(map[string]interface{}{
 			"title": SingleLineTextField("multi add 1"),
@@ -275,10 +280,7 @@ func TestUpdateRecord(t *testing.T) {
 }
 
 func TestDeleteRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
+	a := newApp()
 
 	ids := []uint64{6, 7}
 	if err := a.DeleteRecords(ids); err != nil {
@@ -287,62 +289,35 @@ func TestDeleteRecord(t *testing.T) {
 }
 
 func TestGetRecordsByCursor(t *testing.T) {
-	app := newApp(18)
-
-	if len(app.Password) == 0 {
-		t.Skip()
-	}
-
-	cursor := app.createCursorForTest()
-	record, err := app.GetRecordsByCursor(string(cursor.Id))
-
+	testData := GetDataTestGetRecordsByCursor()
+	app := newApp()
+	_, err := app.GetRecordsByCursor(testData.input[0].(string))
 	if err != nil {
 		t.Errorf("TestGetCursor is failed: %v", err)
 	}
-	fmt.Println(record)
 
-}
-
-func (app *App) createCursorForTest() *Cursor {
-	cursor, err := app.CreateCursor([]string{"$id", "Status"}, "", 400)
-	fmt.Println("cursor", cursor)
-	if err != nil {
-		fmt.Println("createCursorForTest failed: ", err)
-	}
-	return cursor
 }
 
 func TestDeleteCursor(t *testing.T) {
-	app := newApp(18)
-	if len(app.Password) == 0 {
-		t.Skip()
-	}
-
-	cursor := app.createCursorForTest()
-	fmt.Println("cursor", cursor)
-	err := app.DeleteCursor(string(cursor.Id))
-
+	testData := GetTestDataDeleteCursor()
+	app := newApp()
+	err := app.DeleteCursor(testData.input[0].(string))
 	if err != nil {
 		t.Errorf("TestDeleteCursor is failed: %v", err)
 	}
 }
 
 func TestCreateCursor(t *testing.T) {
-	app := newApp(18)
-	if len(app.Password) == 0 {
-		t.Skip()
-	}
-	_, err := app.CreateCursor([]string{"$id", "date"}, "", 100)
+	testData := GetTestDataCreateCursor()
+	app := newApp()
+	_, err := app.CreateCursor(testData.input[0].([]string), testData.input[1].(string), uint64(testData.input[2].(int)))
 	if err != nil {
 		t.Errorf("TestCreateCurSor is failed: %v", err)
 	}
 }
 
 func TestFields(t *testing.T) {
-	a := newApp(8326)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
+	a := newApp()
 
 	fi, err := a.Fields()
 	if err != nil {
@@ -354,11 +329,7 @@ func TestFields(t *testing.T) {
 }
 
 func TestApiToken(t *testing.T) {
-	a := newAppWithApiToken(9974)
-	if len(a.ApiToken) == 0 {
-		t.Skip()
-	}
-
+	a := newAppWithToken()
 	_, err := a.Fields()
 	if err != nil {
 		t.Error("Api token failed", err)
@@ -366,10 +337,7 @@ func TestApiToken(t *testing.T) {
 }
 
 func TestGuestSpace(t *testing.T) {
-	a := newAppInGuestSpace(185, 9)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
+	a := newAppWithGuest()
 
 	_, err := a.Fields()
 	if err != nil {
@@ -378,55 +346,7 @@ func TestGuestSpace(t *testing.T) {
 }
 
 func TestGetRecordComments(t *testing.T) {
-	json := `
-	{
-		"comments": [
-        {
-            "id": "3",
-            "text": "user14 Thank you! Looks great.",
-            "createdAt": "2016-05-09T18:29:05Z",
-            "creator": {
-                "code": "user13",
-                "name": "user13"
-            },
-            "mentions": [
-                {
-                    "code": "user14",
-                    "type": "USER"
-                }
-            ]
-        },
-        {
-            "id": "2",
-            "text": "user13 Global Sales APAC Taskforce \nHere is today's report.",
-            "createdAt": "2016-05-09T18:27:54Z",
-            "creator": {
-                "code": "user14",
-                "name": "user14"
-            },
-            "mentions": [
-                {
-                    "code": "user13",
-                    "type": "USER"
-                },
-                {
-                    "code": "Global Sales_1BNZeQ",
-                    "type": "ORGANIZATION"
-                },
-                {
-                    "code": "APAC Taskforce_DJrvzu",
-                    "type": "GROUP"
-                }
-            ]
-        }
-    ],
-    "older": false,
-    "newer": false
-	}
-	`
-	ts, _ := createResponseLocalTestServer(json)
-	defer ts.Close()
-	a := newAppForTest()
+	a := newApp()
 	var offset uint64 = 0
 	var limit uint64 = 10
 	if rec, err := a.GetRecordComments(1, "asc", offset, limit); err != nil {
@@ -437,15 +357,17 @@ func TestGetRecordComments(t *testing.T) {
 		}
 	}
 }
+
 func TestAddRecordComment(t *testing.T) {
-	appTest := newApp(12)
+	testData := GetTestDataAddRecordComment()
+	appTest := newApp()
 	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
 	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
 	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
 	var cmt Comment
 	cmt.Text = "Test comment 222"
 	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
-	cmtID, err := appTest.AddRecordComment(2, &cmt)
+	cmtID, err := appTest.AddRecordComment(uint64(testData.input[0].(int)), &cmt)
 
 	if err != nil {
 		t.Error(err)
@@ -455,7 +377,7 @@ func TestAddRecordComment(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
-	appTest := newApp(4)
+	appTest := newApp()
 	var cmtID uint64 = 14
 	err := appTest.DeleteComment(3, 12)
 
