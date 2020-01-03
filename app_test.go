@@ -31,7 +31,7 @@ func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
 	listen, err := net.Listen("tcp", KINTONE_DOMAIN)
 
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
 
 	ts.Listener.Close()
@@ -52,10 +52,59 @@ func createServerMux() (*http.ServeMux, error) {
 	return mux, nil
 }
 
-// handler
+// handler mux
+func handleResponseRecordsCursor(response http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		testData := GetDataTestGetRecordsByCursor()
+		fmt.Fprint(response, testData.output)
+	} else if r.Method == "DELETE" {
+		testData := GetTestDataDeleteCursor()
+		fmt.Fprint(response, testData.output)
+	} else if r.Method == "POST" {
+		testData := GetTestDataCreateCursor()
+		fmt.Fprint(response, testData.output)
+	}
+}
+func handleResponseAddRecordComments(response http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		testData := GetTestDataAddRecordComment()
+		fmt.Fprint(response, testData.output)
+	}
+}
+
+func handleResponseUploadFile(response http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		testData := GetDataTestUploadFile()
+		fmt.Fprint(response, testData.output)
+	}
+}
+
 func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
-	testData := GetTestDataGetRecord()
+	if r.Method == "GET" {
+		testData := GetTestDataGetRecord()
+		fmt.Fprint(response, testData.output)
+	} else if r.Method == "PUT" {
+		testData := GetTestDataUpdateRecordByKey()
+		fmt.Fprint(response, testData.output)
+	}
+
+}
+
+func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		testData := GetTestDataGetRecords()
+		fmt.Fprint(response, testData.output)
+	} else if r.Method == "DELETE" {
+		testData := GetTestDataDeleteRecords()
+		fmt.Fprint(response, testData.output)
+	}
+
+}
+
+func handleResponseGetRecordsComments(response http.ResponseWriter, r *http.Request) {
+	testData := GetDataTestRecordComments()
 	fmt.Fprint(response, testData.output)
+
 }
 
 func TestMain(m *testing.M) {
@@ -166,22 +215,30 @@ func TestUpdateRecord(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	rec.Fields["title"] = SingleLineTextField("new title")
 	if err := a.UpdateRecord(rec, true); err != nil {
 		t.Error("UpdateRecord failed", err)
 	}
 
+	rec.Fields["key"] = SingleLineTextField(` {
+		"field": "unique_key",
+		"value": "unique_code"
+	}`)
 	if err := a.UpdateRecordByKey(rec, true, "key"); err != nil {
+
 		t.Error("UpdateRecordByKey failed", err)
 	}
-
 	recs, err := a.GetRecords(nil, "limit 3")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for _, rec := range recs {
 		rec.Fields["title"] = SingleLineTextField(time.Now().String())
+		rec.Fields["key"] = SingleLineTextField(` {
+			"field": "unique_key",
+			"value": "unique_code"
+	}`)
 	}
 	if err := a.UpdateRecords(recs, true); err != nil {
 		t.Error("UpdateRecords failed", err)
