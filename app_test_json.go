@@ -150,6 +150,81 @@ func GetDataTestRecordComments() *TestData {
 	}
 }
 
+func GetDataTestForm() *TestData {
+	return &TestData{
+		output: `{
+			"properties": [
+        {
+            "code": "string_1",
+            "defaultValue": "",
+            "expression": "",
+            "hideExpression": "false",
+            "maxLength": "64",
+            "minLength": null,
+            "label": "string_1",
+            "noLabel": "false",
+            "required": "true",
+            "type": "SINGLE_LINE_TEXT",
+            "unique": "true"
+        },
+        {
+            "code": "number_1",
+            "defaultValue": "12345",
+            "digit": "true",
+            "displayScale": "4",
+            "expression": "",
+            "maxValue": null,
+            "minValue": null,
+            "label": "number_1",
+            "noLabel": "true",
+            "required": "false",
+            "type": "NUMBER",
+            "unique": "false"
+        },
+        {
+            "code": "checkbox_1",
+            "defaultValue": [
+                "sample1",
+                "sample3"
+            ],
+            "label": "checkbox_1",
+            "noLabel": "false",
+            "options": [
+                "sample1",
+                "sample2",
+                "sample3"
+            ],
+            "required": "false",
+            "type": "CHECK_BOX"
+        }
+    ]
+			}`,
+	}
+}
+
+func GetDataTestDeleteRecordComment() *TestData {
+	return &TestData{
+		output: `{}`,
+	}
+}
+func GetTestDataAddRecord() *TestData {
+	return &TestData{
+		output: `{
+			"id": "1",
+    "revision": "1"
+		}`,
+	}
+}
+
+func GetTestDataAddRecords() *TestData {
+	return &TestData{
+		output: `{
+			"ids": ["77","78"],
+			"revisions": ["1","1"]
+		}`,
+	}
+}
+
 func GetDataTestAddRecord() *TestData {
 	return &TestData{
 		input: []interface{}{
