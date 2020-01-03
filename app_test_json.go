@@ -1,0 +1,256 @@
+package kintone
+
+import (
+	"bytes"
+)
+
+type TestData struct {
+	input  []interface{}
+	output string
+}
+
+func GetTestDataDeleteRecords() *TestData {
+	return &TestData{
+		output: `{}`,
+	}
+}
+func GetTestDataGetRecord() *TestData {
+	return &TestData{
+		input: []interface{}{1},
+		output: `{
+		"record": {
+			"Updated_by": {
+				"type": "MODIFIER",
+				"value": {
+						"code": "Administrator",
+						"name": "Administrator"
+				},
+				"key": "hehehe"
+
+
+		},
+
+				"$id": {
+						"type": "__ID__",
+						"value": "1"
+				}
+		}
+	}`,
+	}
+}
+
+func GetTestDataGetRecords() *TestData {
+	return &TestData{
+		output: `{
+			"records": [
+        {
+            "Created_datetime": {
+                "type": "CREATED_TIME",
+                "value": "2019-03-11T04:50:00Z"
+            },
+            "Created_by": {
+                "type": "CREATOR",
+                "value": {
+                    "code": "Administrator",
+                    "name": "Administrator"
+                }
+            },
+            "$id": {
+                "type": "__ID__",
+                "value": "1"
+            }
+        },
+        {
+            "Created_datetime": {
+                "type": "CREATED_TIME",
+                "value": "2019-03-11T06:42:00Z"
+            },
+            "Created_by": {
+                "type": "CREATOR",
+                "value": {
+                    "code": "Administrator",
+                    "name": "Administrator"
+                }
+            },
+            "$id": {
+                "type": "__ID__",
+                "value": "2"
+            }
+        }
+    ],
+    "totalCount": null
+			}`,
+	}
+}
+
+func GetDataTestUploadFile() *TestData {
+	return &TestData{
+		output: `{
+			"app": 3,
+			"id": 6,
+			"record": {
+					"attached_file": {
+							"value": [
+									{
+											"fileKey": " c15b3870-7505-4ab6-9d8d-b9bdbc74f5d6"
+									}
+							]
+					}
+			}
+		}`,
+	}
+}
+
+func GetDataTestRecordComments() *TestData {
+	return &TestData{
+		output: `{
+			"comments": [
+        {
+            "id": "3",
+            "text": "user14 Thank you! Looks great.",
+            "createdAt": "2016-05-09T18:29:05Z",
+            "creator": {
+                "code": "user13",
+                "name": "user13"
+            },
+            "mentions": [
+                {
+                    "code": "user14",
+                    "type": "USER"
+                }
+            ]
+        },
+        {
+            "id": "2",
+            "text": "user13 Global Sales APAC Taskforce \nHere is today's report.",
+            "createdAt": "2016-05-09T18:27:54Z",
+            "creator": {
+                "code": "user14",
+                "name": "user14"
+            },
+            "mentions": [
+                {
+                    "code": "user13",
+                    "type": "USER"
+                },
+                {
+                    "code": "Global Sales_1BNZeQ",
+                    "type": "ORGANIZATION"
+                },
+                {
+                    "code": "APAC Taskforce_DJrvzu",
+                    "type": "GROUP"
+                }
+            ]
+        }
+    ],
+    "older": false,
+    "newer": false
+		}`,
+	}
+}
+
+func GetDataTestAddRecord() *TestData {
+	return &TestData{
+		input: []interface{}{
+			"ほげ春巻.txta",
+			bytes.NewReader([]byte(`abc
+			<a href="https://www.cybozu.com/">hoge</a>
+			`)),
+		},
+		output: `{
+				"id": "1",
+				"revision": "1"
+		}`,
+	}
+}
+func getDataTestCreateCursor() *TestData {
+	return &TestData{
+		output: `{
+				"id": "9a9716fe-1394-4677-a1c7-2199a5d28215",
+				"totalCount": 123456
+	}`,
+	}
+
+}
+func GetDataTestGetRecordsByCursor() *TestData {
+
+	return &TestData{
+		input: []interface{}{"9a9716fe-1394-4677-a1c7-2199a5d28215"},
+		output: `{
+			"records": [
+					{
+							"$id": {
+									"type": "__ID__",
+									"value": "1"
+							},
+							"Created_by": {
+									"type": "CREATOR",
+									"value": {
+											"code": "Administrator",
+											"name": "Administrator"
+									}
+							},
+							"Created_datetime": {
+									"type": "CREATED_TIME",
+									"value": "2019-05-23T04:50:00Z"
+							}
+					}
+			],
+			"next": false
+	}`,
+	}
+}
+
+func GetTestDataDeleteCursor() *TestData {
+	return &TestData{
+		input:  []interface{}{"9a9716fe-1394-4677-a1c7-2199a5d28215"},
+		output: `{}`,
+	}
+}
+
+func GetTestDataCreateCursor() *TestData {
+	return &TestData{
+		input:  []interface{}{[]string{"$id", "date"}, "", 100},
+		output: `{"id":"9a9716fe-1394-4677-a1c7-2199a5d28215"}`,
+	}
+}
+
+func GetTestDataAddRecordComment() *TestData {
+	return &TestData{
+		input:  []interface{}{2},
+		output: `{"id": "4"}`,
+	}
+}
+func GetTestDataUpdateRecordByKey() *TestData {
+	return &TestData{
+		input: []interface{}{2},
+		output: `{ 
+			"app": 1,
+			"records": [
+					{
+							"updateKey": {
+									"field": "unique_key",
+									"value": "CODE123"
+							},
+							"record": {
+									"Text": {
+											"value": "Silver plates"
+									}
+							}
+					},
+					{
+							"updateKey": {
+									"field": "unique_key",
+									"value": "CODE456"
+							},
+							"record": {
+									"Text": {
+											"value": "The quick brown fox."
+									}
+							}
+					}
+			]
+			}`,
+	}
+}

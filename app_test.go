@@ -44,6 +44,11 @@ func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
 func createServerMux() (*http.ServeMux, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/k/v1/record.json", handleResponseGetRecord)
+	mux.HandleFunc("/k/v1/records.json", handleResponseGetRecords)
+	mux.HandleFunc("/k/v1/record/comments.json", handleResponseGetRecordsComments)
+	mux.HandleFunc("/k/v1/file.json", handleResponseUploadFile)
+	mux.HandleFunc("/k/v1/record/comment.json", handleResponseAddRecordComments)
+	mux.HandleFunc("/k/v1/records/cursor.json", handleResponseRecordsCursor)
 	return mux, nil
 }
 
