@@ -47,12 +47,21 @@ func createServerMux() (*http.ServeMux, error) {
 	mux.HandleFunc("/k/v1/records.json", handleResponseGetRecords)
 	mux.HandleFunc("/k/v1/record/comments.json", handleResponseGetRecordsComments)
 	mux.HandleFunc("/k/v1/file.json", handleResponseUploadFile)
-	mux.HandleFunc("/k/v1/record/comment.json", handleResponseAddRecordComments)
+	mux.HandleFunc("/k/v1/record/comment.json", handleResponseRecordComments)
 	mux.HandleFunc("/k/v1/records/cursor.json", handleResponseRecordsCursor)
+	mux.HandleFunc("/k/v1/form.json", handleResponseForm)
+	mux.HandleFunc("/k/guest/1/v1/form.json", handleResponseForm)
 	return mux, nil
 }
 
 // handler mux
+func handleResponseForm(response http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		testData := GetDataTestForm()
+		fmt.Fprint(response, testData.output)
+	}
+}
+
 func handleResponseRecordsCursor(response http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		testData := GetDataTestGetRecordsByCursor()
@@ -65,9 +74,12 @@ func handleResponseRecordsCursor(response http.ResponseWriter, r *http.Request) 
 		fmt.Fprint(response, testData.output)
 	}
 }
-func handleResponseAddRecordComments(response http.ResponseWriter, r *http.Request) {
+func handleResponseRecordComments(response http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		testData := GetTestDataAddRecordComment()
+		fmt.Fprint(response, testData.output)
+	} else if r.Method == "DELETE" {
+		testData := GetDataTestDeleteRecordComment()
 		fmt.Fprint(response, testData.output)
 	}
 }
