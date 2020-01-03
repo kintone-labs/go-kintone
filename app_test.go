@@ -5,9 +5,9 @@
 package kintone
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -17,92 +17,106 @@ import (
 	"time"
 )
 
-func newAppForTest() *App {
-	return &App{
-		Domain:   "127.0.0.1:8088",
-		User:     "test",
-		Password: "test",
-		AppId:    1,
-	}
-}
+const (
+	KINTONE_DOMAIN         = "localhost:8088"
+	KINTONE_USERNAME       = "test"
+	KINTONE_PASSWORD       = "test"
+	KINTONE_APP_ID         = 1
+	KINTONE_API_TOKEN      = "1e42da75-8432-4adb-9a2b-dbb6e7cb3c6b"
+	KINTONE_GUEST_SPACE_ID = 0
+)
 
-func newApp(appID uint64) *App {
-	return &App{
-		Domain:   KINTONE_DOMAIN,
-		User:     KINTONE_USER,
-		Password: KINTONE_PASSWORD,
-		AppId:    appID,
-	}
-}
+func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
+	ts := httptest.NewUnstartedServer(mux)
+	listen, err := net.Listen("tcp", KINTONE_DOMAIN)
 
-func newAppWithApiToken(appId uint64) *App {
-	return &App{
-		Domain:   KINTONE_DOMAIN,
-		ApiToken: KINTONE_API_TOKEN,
-		AppId:    appId,
-	}
-}
-
-func createResponseLocalTestServer(data string) (*httptest.Server, error) {
-	ts, err := NewLocalHTTPSTestServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, data)
-	}))
-	if err != nil {
-		return nil, err
-	}
-
-	return ts, nil
-}
-
-func NewLocalHTTPSTestServer(handler http.Handler) (*httptest.Server, error) {
-	ts := httptest.NewUnstartedServer(handler)
-	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-
-	l, err := net.Listen("tcp", "localhost:8088")
 	if err != nil {
 		fmt.Println(err)
 	}
 
 	ts.Listener.Close()
-	ts.Listener = l
+	ts.Listener = listen
 	ts.StartTLS()
-
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	return ts, nil
 }
 
-func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
+func createServerMux() (*http.ServeMux, error) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/k/v1/record.json", handleResponseGetRecord)
+	return mux, nil
+}
+
+// handler
+func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
+	testData := GetTestDataGetRecord()
+	fmt.Fprint(response, testData.output)
+}
+
+func TestMain(m *testing.M) {
+	mux, err := createServerMux()
+	if err != nil {
+		fmt.Println("StartServerTest", err)
+	}
+	ts, err := createServerTest(mux)
+	if err != nil {
+		fmt.Println("createServerTest", err)
+	}
+	m.Run()
+	ts.Close()
+}
+
+func newApp() *App {
 	return &App{
 		Domain:       KINTONE_DOMAIN,
-		User:         KINTONE_USER,
+		User:         KINTONE_USERNAME,
 		Password:     KINTONE_PASSWORD,
-		AppId:        appId,
-		GuestSpaceId: guestSpaceId,
+		AppId:        KINTONE_APP_ID,
+		ApiToken:     KINTONE_API_TOKEN,
+		GuestSpaceId: KINTONE_GUEST_SPACE_ID,
 	}
 }
 
-func TestGetRecord(t *testing.T) {
+func TestAddRecord(t *testing.T) {
+	testData := GetDataTestAddRecord()
+	a := newApp()
 
-	json := `{
-    "record": {
-			"Updated_by": {
-				"type": "MODIFIER",
-				"value": {
-						"code": "Administrator",
-						"name": "Administrator"
-				}
+	fileKey, err := a.Upload(testData.input[0].(string), "text/html",
+		testData.input[1].(io.Reader))
+	if err != nil {
+		t.Error("Upload failed", err)
+	}
+
+	rec := NewRecord(map[string]interface{}{
+		"title": SingleLineTextField("test!"),
+		"file": FileField{
+			{FileKey: fileKey},
 		},
-        "$id": {
-            "type": "__ID__",
-            "value": "1"
-        }
-    }
-}
-`
-	ts, _ := createResponseLocalTestServer(json)
-	defer ts.Close()
-	a := newAppForTest()
+	})
+	_, err = a.AddRecord(rec)
+	if err != nil {
+		t.Error("AddRecord failed", rec)
+	}
 
-	if rec, err := a.GetRecord(1); err != nil {
+	recs := []*Record{
+		NewRecord(map[string]interface{}{
+			"title": SingleLineTextField("multi add 1"),
+		}),
+		NewRecord(map[string]interface{}{
+			"title": SingleLineTextField("multi add 2"),
+		}),
+	}
+	ids, err := a.AddRecords(recs)
+	if err != nil {
+		t.Error("AddRecords failed", recs)
+	} else {
+		t.Log(ids)
+	}
+}
+func TestGetRecord(t *testing.T) {
+	testData := GetTestDataGetRecord()
+	a := newApp()
+	if rec, err := a.GetRecord(uint64(testData.input[0].(int))); err != nil {
 		t.Error(err)
 	} else {
 		if rec.Id() != 1 {
@@ -139,57 +153,15 @@ func TestGetRecord(t *testing.T) {
 	}
 
 }
-func TestAddRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
-
-	fileKey, err := a.Upload("ほげ春巻.txta", "text/html",
-		bytes.NewReader([]byte(`abc
-<a href="https://www.cybozu.com/">hoge</a>
-`)))
-	if err != nil {
-		t.Error("Upload failed", err)
-	}
-
-	rec := NewRecord(map[string]interface{}{
-		"title": SingleLineTextField("test!"),
-		"file": FileField{
-			{FileKey: fileKey},
-		},
-	})
-	_, err = a.AddRecord(rec)
-	if err != nil {
-		t.Error("AddRecord failed", rec)
-	}
-
-	recs := []*Record{
-		NewRecord(map[string]interface{}{
-			"title": SingleLineTextField("multi add 1"),
-		}),
-		NewRecord(map[string]interface{}{
-			"title": SingleLineTextField("multi add 2"),
-		}),
-	}
-	ids, err := a.AddRecords(recs)
-	if err != nil {
-		t.Error("AddRecords failed", recs)
-	} else {
-		t.Log(ids)
-	}
-}
-
 func TestUpdateRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
+	testData := GetTestDataGetRecord()
+	a := newApp()
 
-	rec, err := a.GetRecord(4)
+	rec, err := a.GetRecord(uint64(testData.input[0].(int)))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	rec.Fields["title"] = SingleLineTextField("new title")
 	if err := a.UpdateRecord(rec, true); err != nil {
 		t.Error("UpdateRecord failed", err)
