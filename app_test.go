@@ -23,7 +23,7 @@ const (
 	KINTONE_PASSWORD       = "test"
 	KINTONE_APP_ID         = 1
 	KINTONE_API_TOKEN      = "1e42da75-8432-4adb-9a2b-dbb6e7cb3c6b"
-	KINTONE_GUEST_SPACE_ID = 0
+	KINTONE_GUEST_SPACE_ID = 1
 )
 
 func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
@@ -122,12 +122,25 @@ func TestMain(m *testing.M) {
 
 func newApp() *App {
 	return &App{
+		Domain:   KINTONE_DOMAIN,
+		User:     KINTONE_USERNAME,
+		Password: KINTONE_PASSWORD,
+		AppId:    KINTONE_APP_ID,
+		ApiToken: KINTONE_API_TOKEN,
+	}
+}
+func newAppWithGuest() *App {
+	return &App{
 		Domain:       KINTONE_DOMAIN,
-		User:         KINTONE_USERNAME,
-		Password:     KINTONE_PASSWORD,
 		AppId:        KINTONE_APP_ID,
 		ApiToken:     KINTONE_API_TOKEN,
 		GuestSpaceId: KINTONE_GUEST_SPACE_ID,
+	}
+}
+func newAppWithToken() *App {
+	return &App{
+		Domain:   KINTONE_DOMAIN,
+		ApiToken: KINTONE_API_TOKEN,
 	}
 }
 
