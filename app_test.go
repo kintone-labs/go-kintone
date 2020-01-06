@@ -12,7 +12,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -58,55 +57,65 @@ func createServerMux() (*http.ServeMux, error) {
 }
 
 // header check
-func checkHeader(response http.ResponseWriter, r *http.Request) {
-	contentType := r.Header.Get("Content-Type")
+func checkAuth(response http.ResponseWriter, r *http.Request) {
 	authPassword := r.Header.Get(AUTH_HEADER_PASSWORD)
 	authToken := r.Header.Get(AUTH_HEADER_TOKEN)
+	if authPassword == "" && authToken == "" {
+		http.Error(response, "Authenticated is fail!", http.StatusForbidden)
+
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte("500 - Authenticated is fail!"))
+	}
+}
+func checkContentType(response http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
 		fmt.Println("Content-type is invalid")
-		os.Exit(1)
-	} else if authPassword == "" && authToken == "" {
-		fmt.Println("Authenticated is fail")
-		os.Exit(1)
+		http.Error(response, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+
 	}
 }
 
 // handler mux
 func handleResponseForm(response http.ResponseWriter, r *http.Request) {
-	checkHeader(response, r)
+	checkAuth(response, r)
 	if r.Method == "GET" {
+		checkContentType(response, r)
 		testData := GetDataTestForm()
 		fmt.Fprint(response, testData.output)
 	}
 }
 
 func handleResponseRecordsCursor(response http.ResponseWriter, r *http.Request) {
+	checkAuth(response, r)
 	if r.Method == "GET" {
 		testData := GetDataTestGetRecordsByCursor()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "DELETE" {
-		checkHeader(response, r)
+		checkContentType(response, r)
 		testData := GetTestDataDeleteCursor()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "POST" {
-		checkHeader(response, r)
+		checkContentType(response, r)
 		testData := GetTestDataCreateCursor()
 		fmt.Fprint(response, testData.output)
 	}
 }
 func handleResponseRecordComments(response http.ResponseWriter, r *http.Request) {
-	checkHeader(response, r)
+	checkAuth(response, r)
 	if r.Method == "POST" {
+		checkContentType(response, r)
 		testData := GetTestDataAddRecordComment()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "DELETE" {
+		checkContentType(response, r)
 		testData := GetDataTestDeleteRecordComment()
 		fmt.Fprint(response, testData.output)
 	}
 }
 
 func handleResponseUploadFile(response http.ResponseWriter, r *http.Request) {
-	// checkHeader(response, r)
+	checkAuth(response, r)
 	if r.Method == "POST" {
 		testData := GetDataTestUploadFile()
 		fmt.Fprint(response, testData.output)
@@ -114,14 +123,17 @@ func handleResponseUploadFile(response http.ResponseWriter, r *http.Request) {
 }
 
 func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
-	checkHeader(response, r)
+	checkAuth(response, r)
 	if r.Method == "GET" {
+		checkContentType(response, r)
 		testData := GetTestDataGetRecord()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "PUT" {
+		checkContentType(response, r)
 		testData := GetTestDataUpdateRecordByKey()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "POST" {
+		checkContentType(response, r)
 		testData := GetTestDataAddRecord()
 		fmt.Fprint(response, testData.output)
 	}
@@ -129,14 +141,17 @@ func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
 }
 
 func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
-	checkHeader(response, r)
+	checkAuth(response, r)
 	if r.Method == "GET" {
+		checkContentType(response, r)
 		testData := GetTestDataGetRecords()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "DELETE" {
+		checkContentType(response, r)
 		testData := GetTestDataDeleteRecords()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "POST" {
+		checkContentType(response, r)
 		testData := GetTestDataAddRecords()
 		fmt.Fprint(response, testData.output)
 	}
@@ -144,7 +159,8 @@ func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
 }
 
 func handleResponseGetRecordsComments(response http.ResponseWriter, r *http.Request) {
-	checkHeader(response, r)
+	checkAuth(response, r)
+	checkContentType(response, r)
 	testData := GetDataTestRecordComments()
 	fmt.Fprint(response, testData.output)
 
