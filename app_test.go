@@ -199,6 +199,7 @@ func newAppWithGuest() *App {
 }
 func newAppWithToken() *App {
 	return &App{
+		AppId:    KINTONE_APP_ID,
 		Domain:   KINTONE_DOMAIN,
 		ApiToken: KINTONE_API_TOKEN,
 	}
