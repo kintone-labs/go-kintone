@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -24,6 +25,8 @@ const (
 	KINTONE_APP_ID         = 1
 	KINTONE_API_TOKEN      = "1e42da75-8432-4adb-9a2b-dbb6e7cb3c6b"
 	KINTONE_GUEST_SPACE_ID = 1
+	AUTH_HEADER_TOKEN      = "X-Cybozu-API-Token"
+	AUTH_HEADER_PASSWORD   = "X-Cybozu-Authorization"
 )
 
 func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
@@ -54,8 +57,23 @@ func createServerMux() (*http.ServeMux, error) {
 	return mux, nil
 }
 
+// header check
+func checkHeader(response http.ResponseWriter, r *http.Request) {
+	contentType := r.Header.Get("Content-Type")
+	authPassword := r.Header.Get(AUTH_HEADER_PASSWORD)
+	authToken := r.Header.Get(AUTH_HEADER_TOKEN)
+	if contentType != "application/json" {
+		fmt.Println("Content-type is invalid")
+		os.Exit(1)
+	} else if authPassword == "" && authToken == "" {
+		fmt.Println("Authenticated is fail")
+		os.Exit(1)
+	}
+}
+
 // handler mux
 func handleResponseForm(response http.ResponseWriter, r *http.Request) {
+	checkHeader(response, r)
 	if r.Method == "GET" {
 		testData := GetDataTestForm()
 		fmt.Fprint(response, testData.output)
@@ -67,14 +85,17 @@ func handleResponseRecordsCursor(response http.ResponseWriter, r *http.Request) 
 		testData := GetDataTestGetRecordsByCursor()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "DELETE" {
+		checkHeader(response, r)
 		testData := GetTestDataDeleteCursor()
 		fmt.Fprint(response, testData.output)
 	} else if r.Method == "POST" {
+		checkHeader(response, r)
 		testData := GetTestDataCreateCursor()
 		fmt.Fprint(response, testData.output)
 	}
 }
 func handleResponseRecordComments(response http.ResponseWriter, r *http.Request) {
+	checkHeader(response, r)
 	if r.Method == "POST" {
 		testData := GetTestDataAddRecordComment()
 		fmt.Fprint(response, testData.output)
@@ -85,6 +106,7 @@ func handleResponseRecordComments(response http.ResponseWriter, r *http.Request)
 }
 
 func handleResponseUploadFile(response http.ResponseWriter, r *http.Request) {
+	// checkHeader(response, r)
 	if r.Method == "POST" {
 		testData := GetDataTestUploadFile()
 		fmt.Fprint(response, testData.output)
@@ -92,6 +114,7 @@ func handleResponseUploadFile(response http.ResponseWriter, r *http.Request) {
 }
 
 func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
+	checkHeader(response, r)
 	if r.Method == "GET" {
 		testData := GetTestDataGetRecord()
 		fmt.Fprint(response, testData.output)
@@ -106,6 +129,7 @@ func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
 }
 
 func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
+	checkHeader(response, r)
 	if r.Method == "GET" {
 		testData := GetTestDataGetRecords()
 		fmt.Fprint(response, testData.output)
@@ -120,6 +144,7 @@ func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
 }
 
 func handleResponseGetRecordsComments(response http.ResponseWriter, r *http.Request) {
+	checkHeader(response, r)
 	testData := GetDataTestRecordComments()
 	fmt.Fprint(response, testData.output)
 
