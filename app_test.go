@@ -63,8 +63,11 @@ func checkAuth(response http.ResponseWriter, request *http.Request) {
 	authToken := request.Header.Get(AUTH_HEADER_TOKEN)
 	userAndPass := base64.StdEncoding.EncodeToString(
 		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
-	if authPassword != userAndPass && authToken != KINTONE_API_TOKEN {
+	if authToken != KINTONE_API_TOKEN {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	} else if authPassword != userAndPass {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+
 	}
 
 }
