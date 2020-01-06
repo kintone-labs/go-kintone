@@ -22,18 +22,18 @@ func GetTestDataGetRecord() *TestData {
             "Updated_by": {
                 "type": "MODIFIER",
                 "value": {
-                        "code": "Administrator",
-                        "name": "Administrator"
+                    "code": "Administrator",
+                    "name": "Administrator"
                 },
                 "key": "hehehe"
 
 
         },
 
-                "$id": {
-                        "type": "__ID__",
-                        "value": "1"
-                }
+            "$id": {
+                "type": "__ID__",
+                "value": "1"
+            }
         }
     }`,
 	}
@@ -91,9 +91,9 @@ func GetDataTestUploadFile() *TestData {
       "record": {
         "attached_file": {
           "value": [
-                  {
-                          "fileKey": " c15b3870-7505-4ab6-9d8d-b9bdbc74f5d6"
-                  }
+            {
+                    "fileKey": " c15b3870-7505-4ab6-9d8d-b9bdbc74f5d6"
+            }
           ]
         }
       }
@@ -146,14 +146,14 @@ func GetDataTestRecordComments() *TestData {
     ],
     "older": false,
     "newer": false
-        }`,
+    }`,
 	}
 }
 
 func GetDataTestForm() *TestData {
 	return &TestData{
 		output: `{
-            "properties": [
+        "properties": [
         {
             "code": "string_1",
             "defaultValue": "",
@@ -197,8 +197,8 @@ func GetDataTestForm() *TestData {
             "required": "false",
             "type": "CHECK_BOX"
         }
-    ]
-            }`,
+        ]
+    }`,
 	}
 }
 
@@ -211,7 +211,7 @@ func GetTestDataAddRecord() *TestData {
 	return &TestData{
 		output: `{
             "id": "1",
-    "revision": "1"
+            "revision": "1"
         }`,
 	}
 }
@@ -255,23 +255,23 @@ func GetDataTestGetRecordsByCursor() *TestData {
 		input: []interface{}{"9a9716fe-1394-4677-a1c7-2199a5d28215"},
 		output: `{
             "records": [
-                    {
-                        "$id": {
-                                "type": "__ID__",
-                                "value": "1"
-                        },
-                        "Created_by": {
-                                "type": "CREATOR",
-                                "value": {
-                                        "code": "Administrator",
-                                        "name": "Administrator"
-                                }
-                        },
-                        "Created_datetime": {
-                                "type": "CREATED_TIME",
-                                "value": "2019-05-23T04:50:00Z"
-                        }
+                {
+                    "$id": {
+                            "type": "__ID__",
+                            "value": "1"
+                    },
+                    "Created_by": {
+                            "type": "CREATOR",
+                            "value": {
+                                    "code": "Administrator",
+                                    "name": "Administrator"
+                            }
+                    },
+                    "Created_datetime": {
+                            "type": "CREATED_TIME",
+                            "value": "2019-05-23T04:50:00Z"
                     }
+                }
             ],
             "next": false
     }`,
@@ -306,24 +306,24 @@ func GetTestDataUpdateRecordByKey() *TestData {
             "records": [
               {
                 "updateKey": {
-                        "field": "unique_key",
-                        "value": "CODE123"
+                    "field": "unique_key",
+                    "value": "CODE123"
                 },
                 "record": {
-                        "Text": {
-                                "value": "Silver plates"
-                        }
+                    "Text": {
+                        "value": "Silver plates"
+                    }
                 }
               },
               {
                 "updateKey": {
-                        "field": "unique_key",
-                        "value": "CODE456"
+                    "field": "unique_key",
+                    "value": "CODE456"
                 },
                 "record": {
-                        "Text": {
-                                "value": "The quick brown fox."
-                        }
+                    "Text": {
+                            "value": "The quick brown fox."
+                    }
                 }
               }
             ]

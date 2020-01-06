@@ -101,6 +101,7 @@ func handleResponseRecordsCursor(response http.ResponseWriter, request *http.Req
 		fmt.Fprint(response, testData.output)
 	}
 }
+
 func handleResponseRecordComments(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
 	if request.Method == "POST" {
