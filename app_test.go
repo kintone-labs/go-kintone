@@ -64,15 +64,14 @@ func checkAuth(response http.ResponseWriter, request *http.Request) {
 	userAndPass := base64.StdEncoding.EncodeToString(
 		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
 	if authPassword != userAndPass && authToken != KINTONE_API_TOKEN {
-		http.Error(response, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 
 }
 func checkContentType(response http.ResponseWriter, request *http.Request) {
 	contentType := request.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		http.Error(response, http.StatusText(http.StatusNotFound), http.StatusNotFound)
-
+		http.Error(response, http.StatusText(http.StatusNoContent), http.StatusNoContent)
 	}
 }
 
@@ -186,7 +185,6 @@ func newApp() *App {
 		User:     KINTONE_USERNAME,
 		Password: KINTONE_PASSWORD,
 		AppId:    KINTONE_APP_ID,
-		ApiToken: KINTONE_API_TOKEN,
 	}
 }
 func newAppWithGuest() *App {
