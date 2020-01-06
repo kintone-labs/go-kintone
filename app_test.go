@@ -24,7 +24,7 @@ const (
 	KINTONE_APP_ID         = 1
 	KINTONE_API_TOKEN      = "1e42da75-8432-4adb-9a2b-dbb6e7cb3c6b"
 	KINTONE_GUEST_SPACE_ID = 1
-	AUTH_HEADER_TOKEN      = "X-Cybozu1-API-Token"
+	AUTH_HEADER_TOKEN      = "X-Cybozu-API-Token"
 	AUTH_HEADER_PASSWORD   = "X-Cybozu-Authorization"
 )
 
