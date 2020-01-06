@@ -6,6 +6,7 @@ package kintone
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -57,15 +58,18 @@ func createServerMux() (*http.ServeMux, error) {
 }
 
 // header check
-func checkAuth(response http.ResponseWriter, r *http.Request) {
-	authPassword := r.Header.Get(AUTH_HEADER_PASSWORD)
-	authToken := r.Header.Get(AUTH_HEADER_TOKEN)
-	if authPassword == "" && authToken == "" {
+func checkAuth(response http.ResponseWriter, request *http.Request) {
+	authPassword := request.Header.Get(AUTH_HEADER_PASSWORD)
+	authToken := request.Header.Get(AUTH_HEADER_TOKEN)
+	userAndPass := base64.StdEncoding.EncodeToString(
+		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
+	if authPassword != userAndPass && authToken != KINTONE_API_TOKEN {
 		http.Error(response, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 	}
+
 }
-func checkContentType(response http.ResponseWriter, r *http.Request) {
-	contentType := r.Header.Get("Content-Type")
+func checkContentType(response http.ResponseWriter, request *http.Request) {
+	contentType := request.Header.Get("Content-Type")
 	if contentType != "application/json" {
 		http.Error(response, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 
@@ -73,90 +77,90 @@ func checkContentType(response http.ResponseWriter, r *http.Request) {
 }
 
 // handler mux
-func handleResponseForm(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	if r.Method == "GET" {
-		checkContentType(response, r)
+func handleResponseForm(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "GET" {
+		checkContentType(response, request)
 		testData := GetDataTestForm()
 		fmt.Fprint(response, testData.output)
 	}
 }
 
-func handleResponseRecordsCursor(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	if r.Method == "GET" {
+func handleResponseRecordsCursor(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "GET" {
 		testData := GetDataTestGetRecordsByCursor()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "DELETE" {
-		checkContentType(response, r)
+	} else if request.Method == "DELETE" {
+		checkContentType(response, request)
 		testData := GetTestDataDeleteCursor()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "POST" {
-		checkContentType(response, r)
+	} else if request.Method == "POST" {
+		checkContentType(response, request)
 		testData := GetTestDataCreateCursor()
 		fmt.Fprint(response, testData.output)
 	}
 }
-func handleResponseRecordComments(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	if r.Method == "POST" {
-		checkContentType(response, r)
+func handleResponseRecordComments(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "POST" {
+		checkContentType(response, request)
 		testData := GetTestDataAddRecordComment()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "DELETE" {
-		checkContentType(response, r)
+	} else if request.Method == "DELETE" {
+		checkContentType(response, request)
 		testData := GetDataTestDeleteRecordComment()
 		fmt.Fprint(response, testData.output)
 	}
 }
 
-func handleResponseUploadFile(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	if r.Method == "POST" {
+func handleResponseUploadFile(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "POST" {
 		testData := GetDataTestUploadFile()
 		fmt.Fprint(response, testData.output)
 	}
 }
 
-func handleResponseGetRecord(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	if r.Method == "GET" {
-		checkContentType(response, r)
+func handleResponseGetRecord(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "GET" {
+		checkContentType(response, request)
 		testData := GetTestDataGetRecord()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "PUT" {
-		checkContentType(response, r)
+	} else if request.Method == "PUT" {
+		checkContentType(response, request)
 		testData := GetTestDataUpdateRecordByKey()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "POST" {
-		checkContentType(response, r)
+	} else if request.Method == "POST" {
+		checkContentType(response, request)
 		testData := GetTestDataAddRecord()
 		fmt.Fprint(response, testData.output)
 	}
 
 }
 
-func handleResponseGetRecords(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	if r.Method == "GET" {
-		checkContentType(response, r)
+func handleResponseGetRecords(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "GET" {
+		checkContentType(response, request)
 		testData := GetTestDataGetRecords()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "DELETE" {
-		checkContentType(response, r)
+	} else if request.Method == "DELETE" {
+		checkContentType(response, request)
 		testData := GetTestDataDeleteRecords()
 		fmt.Fprint(response, testData.output)
-	} else if r.Method == "POST" {
-		checkContentType(response, r)
+	} else if request.Method == "POST" {
+		checkContentType(response, request)
 		testData := GetTestDataAddRecords()
 		fmt.Fprint(response, testData.output)
 	}
 
 }
 
-func handleResponseGetRecordsComments(response http.ResponseWriter, r *http.Request) {
-	checkAuth(response, r)
-	checkContentType(response, r)
+func handleResponseGetRecordsComments(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	checkContentType(response, request)
 	testData := GetDataTestRecordComments()
 	fmt.Fprint(response, testData.output)
 
@@ -201,9 +205,9 @@ func newAppWithToken() *App {
 
 func TestAddRecord(t *testing.T) {
 	testData := GetDataTestAddRecord()
-	a := newApp()
+	app := newApp()
 
-	fileKey, err := a.Upload(testData.input[0].(string), "text/html",
+	fileKey, err := app.Upload(testData.input[0].(string), testData.input[2].(string),
 		testData.input[1].(io.Reader))
 	if err != nil {
 		t.Error("Upload failed", err)
@@ -215,7 +219,7 @@ func TestAddRecord(t *testing.T) {
 			{FileKey: fileKey},
 		},
 	})
-	_, err = a.AddRecord(rec)
+	_, err = app.AddRecord(rec)
 	if err != nil {
 		t.Error("AddRecord failed", rec)
 	}
@@ -227,7 +231,7 @@ func TestAddRecord(t *testing.T) {
 			"title": SingleLineTextField("multi add 2"),
 		}),
 	}
-	ids, err := a.AddRecords(recs)
+	ids, err := app.AddRecords(recs)
 	if err != nil {
 		t.Error("AddRecords failed", recs)
 	} else {
