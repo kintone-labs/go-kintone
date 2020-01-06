@@ -63,11 +63,10 @@ func checkAuth(response http.ResponseWriter, request *http.Request) {
 	authToken := request.Header.Get(AUTH_HEADER_TOKEN)
 	userAndPass := base64.StdEncoding.EncodeToString(
 		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
-	if authToken != KINTONE_API_TOKEN {
+	if authToken != "" && authToken != KINTONE_API_TOKEN {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	} else if authPassword != userAndPass {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-
 	}
 
 }
@@ -243,8 +242,8 @@ func TestAddRecord(t *testing.T) {
 }
 func TestGetRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
-	a := newApp()
-	if rec, err := a.GetRecord(uint64(testData.input[0].(int))); err != nil {
+	app := newApp()
+	if rec, err := app.GetRecord(uint64(testData.input[0].(int))); err != nil {
 		t.Error(err)
 	} else {
 		if rec.Id() != 1 {
@@ -255,7 +254,7 @@ func TestGetRecord(t *testing.T) {
 				if len(files) == 0 {
 					continue
 				}
-				fd, err := a.Download(files[0].FileKey)
+				fd, err := app.Download(files[0].FileKey)
 				if err != nil {
 					t.Error(err)
 				} else {
@@ -266,7 +265,7 @@ func TestGetRecord(t *testing.T) {
 		}
 	}
 
-	if recs, err := a.GetRecords(nil, "limit 3 offset 3"); err != nil {
+	if recs, err := app.GetRecords(nil, "limit 3 offset 3"); err != nil {
 		t.Error(err)
 	} else {
 		if len(recs) > 3 {
@@ -274,7 +273,7 @@ func TestGetRecord(t *testing.T) {
 		}
 	}
 
-	if recs, err := a.GetAllRecords([]string{"レコード番号"}); err != nil {
+	if recs, err := app.GetAllRecords([]string{"レコード番号"}); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(len(recs))
@@ -283,14 +282,14 @@ func TestGetRecord(t *testing.T) {
 }
 func TestUpdateRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
-	a := newApp()
+	app := newApp()
 
-	rec, err := a.GetRecord(uint64(testData.input[0].(int)))
+	rec, err := app.GetRecord(uint64(testData.input[0].(int)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	rec.Fields["title"] = SingleLineTextField("new title")
-	if err := a.UpdateRecord(rec, true); err != nil {
+	if err := app.UpdateRecord(rec, true); err != nil {
 		t.Error("UpdateRecord failed", err)
 	}
 
@@ -298,11 +297,11 @@ func TestUpdateRecord(t *testing.T) {
 		"field": "unique_key",
 		"value": "unique_code"
 	}`)
-	if err := a.UpdateRecordByKey(rec, true, "key"); err != nil {
+	if err := app.UpdateRecordByKey(rec, true, "key"); err != nil {
 
 		t.Error("UpdateRecordByKey failed", err)
 	}
-	recs, err := a.GetRecords(nil, "limit 3")
+	recs, err := app.GetRecords(nil, "limit 3")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -314,20 +313,20 @@ func TestUpdateRecord(t *testing.T) {
 			"value": "unique_code"
 	}`)
 	}
-	if err := a.UpdateRecords(recs, true); err != nil {
+	if err := app.UpdateRecords(recs, true); err != nil {
 		t.Error("UpdateRecords failed", err)
 	}
 
-	if err := a.UpdateRecordsByKey(recs, true, "key"); err != nil {
+	if err := app.UpdateRecordsByKey(recs, true, "key"); err != nil {
 		t.Error("UpdateRecordsByKey failed", err)
 	}
 }
 
 func TestDeleteRecord(t *testing.T) {
-	a := newApp()
+	app := newApp()
 
 	ids := []uint64{6, 7}
-	if err := a.DeleteRecords(ids); err != nil {
+	if err := app.DeleteRecords(ids); err != nil {
 		t.Error("DeleteRecords failed", err)
 	}
 }
@@ -361,9 +360,9 @@ func TestCreateCursor(t *testing.T) {
 }
 
 func TestFields(t *testing.T) {
-	a := newApp()
+	app := newApp()
 
-	fi, err := a.Fields()
+	fi, err := app.Fields()
 	if err != nil {
 		t.Error("Fields failed", err)
 	}
@@ -373,27 +372,27 @@ func TestFields(t *testing.T) {
 }
 
 func TestApiToken(t *testing.T) {
-	a := newAppWithToken()
-	_, err := a.Fields()
+	app := newAppWithToken()
+	_, err := app.Fields()
 	if err != nil {
 		t.Error("Api token failed", err)
 	}
 }
 
 func TestGuestSpace(t *testing.T) {
-	a := newAppWithGuest()
+	app := newAppWithGuest()
 
-	_, err := a.Fields()
+	_, err := app.Fields()
 	if err != nil {
 		t.Error("GuestSpace failed", err)
 	}
 }
 
 func TestGetRecordComments(t *testing.T) {
-	a := newApp()
+	app := newApp()
 	var offset uint64 = 0
 	var limit uint64 = 10
-	if rec, err := a.GetRecordComments(1, "asc", offset, limit); err != nil {
+	if rec, err := app.GetRecordComments(1, "asc", offset, limit); err != nil {
 		t.Error(err)
 	} else {
 		if !strings.Contains(rec[0].Id, "3") {
