@@ -171,7 +171,6 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 		testData := GetTestDataAddRecords()
 		fmt.Fprint(response, testData.output)
 	}
-
 }
 
 func handleResponseGetRecordsComments(response http.ResponseWriter, request *http.Request) {
@@ -179,7 +178,6 @@ func handleResponseGetRecordsComments(response http.ResponseWriter, request *htt
 	checkContentType(response, request)
 	testData := GetDataTestRecordComments()
 	fmt.Fprint(response, testData.output)
-
 }
 
 func TestMain(m *testing.M) {
