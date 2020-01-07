@@ -11,12 +11,13 @@ type TestData struct {
 
 func GetTestDataDeleteRecords() *TestData {
 	return &TestData{
+		input:  []interface{}{[]uint64{6, 7}},
 		output: `{}`,
 	}
 }
 func GetTestDataGetRecord() *TestData {
 	return &TestData{
-		input: []interface{}{1},
+		input: []interface{}{1, true},
 		output: `
 		{
 			"record":{
@@ -107,6 +108,7 @@ func GetDataTestUploadFile() *TestData {
 
 func GetDataTestRecordComments() *TestData {
 	return &TestData{
+		input: []interface{}{1, "asc", 0, 10},
 		output: `
 		{
 			"comments":[
@@ -210,6 +212,7 @@ func GetDataTestForm() *TestData {
 
 func GetDataTestDeleteRecordComment() *TestData {
 	return &TestData{
+		input:  []interface{}{3, 14},
 		output: `{}`,
 	}
 }
@@ -310,7 +313,7 @@ func GetTestDataAddRecordComment() *TestData {
 }
 func GetTestDataUpdateRecordByKey() *TestData {
 	return &TestData{
-		input: []interface{}{2},
+		input: []interface{}{2, "key", true},
 		output: `
 		{
 			"app":1,
