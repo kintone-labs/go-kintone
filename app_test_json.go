@@ -41,7 +41,7 @@ func GetTestDataGetRecord() *TestData {
 func GetTestDataGetRecords() *TestData {
 	return &TestData{
 		input: []interface{}{
-			[]string{"Created_datetime"},
+			[]string{},
 			"limit 3 offset 3",
 		},
 		output: `
