@@ -75,10 +75,10 @@ func checkAuth(response http.ResponseWriter, request *http.Request) {
 	userAndPassBasic := "Basic " + base64.StdEncoding.EncodeToString(
 		[]byte(BASIC_AUTH_USER+":"+BASIC_AUTH_PASSWORD))
 
-	if authToken != "" && authPassword != "" && authBasic != "" {
+	if authToken == "" && authPassword == "" && authBasic == "" {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
-	if BASIC_AUTH && authBasic != userAndPassBasic {
+	if BASIC_AUTH && authBasic != "" && authBasic != userAndPassBasic {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 	if authToken != "" && authToken != KINTONE_API_TOKEN {
