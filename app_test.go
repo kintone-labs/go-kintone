@@ -27,8 +27,12 @@ const (
 	KINTONE_GUEST_SPACE_ID = 1
 	AUTH_HEADER_TOKEN      = "X-Cybozu-API-Token"
 	AUTH_HEADER_PASSWORD   = "X-Cybozu-Authorization"
+	AUTH_HEADER_BASIC      = "Authorization"
 	CONTENT_TYPE           = "Content-Type"
 	APPLICATION_JSON       = "application/json"
+	BASIC_AUTH             = true
+	BASIC_AUTH_USER        = "basic"
+	BASIC_AUTH_PASSWORD    = "basic"
 )
 
 func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
@@ -63,14 +67,28 @@ func createServerMux() *http.ServeMux {
 func checkAuth(response http.ResponseWriter, request *http.Request) {
 	authPassword := request.Header.Get(AUTH_HEADER_PASSWORD)
 	authToken := request.Header.Get(AUTH_HEADER_TOKEN)
+	authBasic := request.Header.Get(AUTH_HEADER_BASIC)
+
 	userAndPass := base64.StdEncoding.EncodeToString(
 		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
+
+	userAndPassBasic := "Basic " + base64.StdEncoding.EncodeToString(
+		[]byte(BASIC_AUTH_USER+":"+BASIC_AUTH_PASSWORD))
+
+	if authToken != "" && authPassword != "" && authBasic != "" {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	}
+	if BASIC_AUTH && authBasic != userAndPassBasic {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	}
 	if authToken != "" && authToken != KINTONE_API_TOKEN {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-	} else if authPassword != userAndPass {
+	}
+	if authPassword != "" && authPassword != userAndPass {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 }
+
 func checkContentType(response http.ResponseWriter, request *http.Request) {
 	contentType := request.Header.Get(CONTENT_TYPE)
 	if contentType != APPLICATION_JSON {
@@ -236,6 +254,7 @@ func TestAddRecord(t *testing.T) {
 }
 func TestGetRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
+	testDataRecords := GetTestDataGetRecords()
 	app := newApp()
 	if rec, err := app.GetRecord(uint64(testData.input[0].(int))); err != nil {
 		t.Error(err)
@@ -259,7 +278,7 @@ func TestGetRecord(t *testing.T) {
 		}
 	}
 
-	if recs, err := app.GetRecords(nil, testData.input[0].(string)); err != nil {
+	if recs, err := app.GetRecords(testDataRecords.input[0].([]string), testDataRecords.input[1].(string)); err != nil {
 		t.Error(err)
 	} else {
 		if len(recs) > 3 {
@@ -267,7 +286,7 @@ func TestGetRecord(t *testing.T) {
 		}
 	}
 
-	if recs, err := app.GetAllRecords([]string{"レコード番号"}); err != nil {
+	if recs, err := app.GetAllRecords(testDataRecords.input[0].([]string)); err != nil {
 		t.Error(err)
 	} else {
 		t.Log(len(recs))
@@ -276,6 +295,9 @@ func TestGetRecord(t *testing.T) {
 }
 func TestUpdateRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
+	testDataRecords := GetTestDataGetRecords()
+	testDataRecordByKey := GetTestDataUpdateRecordByKey()
+
 	app := newApp()
 
 	rec, err := app.GetRecord(uint64(testData.input[0].(int)))
@@ -283,19 +305,18 @@ func TestUpdateRecord(t *testing.T) {
 		t.Fatal(err)
 	}
 	rec.Fields["title"] = SingleLineTextField("new title")
-	if err := app.UpdateRecord(rec, true); err != nil {
+	if err := app.UpdateRecord(rec, testData.input[1].(bool)); err != nil {
 		t.Error("UpdateRecord failed", err)
 	}
 
-	rec.Fields["key"] = SingleLineTextField(` {
+	rec.Fields[testDataRecordByKey.input[1].(string)] = SingleLineTextField(` {
 		"field": "unique_key",
 		"value": "unique_code"
 	}`)
-	if err := app.UpdateRecordByKey(rec, true, "key"); err != nil {
-
+	if err := app.UpdateRecordByKey(rec, testData.input[1].(bool), testDataRecordByKey.input[1].(string)); err != nil {
 		t.Error("UpdateRecordByKey failed", err)
 	}
-	recs, err := app.GetRecords(nil, "limit 3")
+	recs, err := app.GetRecords(testDataRecords.input[0].([]string), testDataRecords.input[1].(string))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -307,20 +328,19 @@ func TestUpdateRecord(t *testing.T) {
 			"value": "unique_code"
 	}`)
 	}
-	if err := app.UpdateRecords(recs, true); err != nil {
+	if err := app.UpdateRecords(recs, testData.input[1].(bool)); err != nil {
 		t.Error("UpdateRecords failed", err)
 	}
 
-	if err := app.UpdateRecordsByKey(recs, true, "key"); err != nil {
+	if err := app.UpdateRecordsByKey(recs, testDataRecordByKey.input[2].(bool), testDataRecordByKey.input[1].(string)); err != nil {
 		t.Error("UpdateRecordsByKey failed", err)
 	}
 }
 
 func TestDeleteRecord(t *testing.T) {
+	testData := GetTestDataDeleteRecords()
 	app := newApp()
-
-	ids := []uint64{6, 7}
-	if err := app.DeleteRecords(ids); err != nil {
+	if err := app.DeleteRecords(testData.input[0].([]uint64)); err != nil {
 		t.Error("DeleteRecords failed", err)
 	}
 }
@@ -355,7 +375,6 @@ func TestCreateCursor(t *testing.T) {
 
 func TestFields(t *testing.T) {
 	app := newApp()
-
 	fi, err := app.Fields()
 	if err != nil {
 		t.Error("Fields failed", err)
@@ -375,7 +394,6 @@ func TestApiToken(t *testing.T) {
 
 func TestGuestSpace(t *testing.T) {
 	app := newAppWithGuest()
-
 	_, err := app.Fields()
 	if err != nil {
 		t.Error("GuestSpace failed", err)
@@ -383,10 +401,9 @@ func TestGuestSpace(t *testing.T) {
 }
 
 func TestGetRecordComments(t *testing.T) {
+	testData := GetDataTestRecordComments()
 	app := newApp()
-	var offset uint64 = 0
-	var limit uint64 = 10
-	if rec, err := app.GetRecordComments(1, "asc", offset, limit); err != nil {
+	if rec, err := app.GetRecordComments(uint64(testData.input[0].(int)), testData.input[1].(string), uint64(testData.input[2].(int)), uint64(testData.input[3].(int))); err != nil {
 		t.Error(err)
 	} else {
 		if !strings.Contains(rec[0].Id, "3") {
@@ -414,13 +431,12 @@ func TestAddRecordComment(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
+	testData := GetDataTestDeleteRecordComment()
 	appTest := newApp()
-	var cmtID uint64 = 14
-	err := appTest.DeleteComment(3, 12)
-
+	err := appTest.DeleteComment(uint64(testData.input[0].(int)), uint64(testData.input[1].(int)))
 	if err != nil {
 		t.Error(err)
 	} else {
-		t.Logf("The comment with id =  %v has been deleted successefully!", cmtID)
+		t.Logf("The comment with id =  %v has been deleted successefully!", uint64(testData.input[0].(int)))
 	}
 }
