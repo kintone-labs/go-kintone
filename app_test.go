@@ -13,6 +13,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -186,10 +187,12 @@ func TestMain(m *testing.M) {
 	mux := createServerMux()
 	ts, err := createServerTest(mux)
 	if err != nil {
-		fmt.Println("createServerTest", err)
+		fmt.Println("createServerTest: ", err)
+		os.Exit(1)
 	}
-	m.Run()
+	code := m.Run()
 	ts.Close()
+	os.Exit(code)
 }
 
 func newApp() *App {
