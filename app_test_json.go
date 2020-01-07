@@ -16,7 +16,7 @@ func GetTestDataDeleteRecords() *TestData {
 }
 func GetTestDataGetRecord() *TestData {
 	return &TestData{
-		input: []interface{}{1},
+		input: []interface{}{"limit 100"},
 		output: `{
         "record": {
             "Updated_by": {
@@ -41,9 +41,13 @@ func GetTestDataGetRecord() *TestData {
 
 func GetTestDataGetRecords() *TestData {
 	return &TestData{
+		input: []interface{}{
+			nil,
+			"limit 3 offset 3",
+		},
 		output: `{
-            "records": [
-        {
+        "records": [
+            {
             "Created_datetime": {
                 "type": "CREATED_TIME",
                 "value": "2019-03-11T04:50:00Z"
