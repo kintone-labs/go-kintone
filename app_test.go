@@ -27,6 +27,8 @@ const (
 	KINTONE_GUEST_SPACE_ID = 1
 	AUTH_HEADER_TOKEN      = "X-Cybozu-API-Token"
 	AUTH_HEADER_PASSWORD   = "X-Cybozu-Authorization"
+	CONTENT_TYPE           = "Content-Type"
+	APPLICATION_JSON       = "application/json"
 )
 
 func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
@@ -44,7 +46,7 @@ func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
 	return ts, nil
 }
 
-func createServerMux() (*http.ServeMux, error) {
+func createServerMux() *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/k/v1/record.json", handleResponseGetRecord)
 	mux.HandleFunc("/k/v1/records.json", handleResponseGetRecords)
@@ -54,7 +56,7 @@ func createServerMux() (*http.ServeMux, error) {
 	mux.HandleFunc("/k/v1/records/cursor.json", handleResponseRecordsCursor)
 	mux.HandleFunc("/k/v1/form.json", handleResponseForm)
 	mux.HandleFunc("/k/guest/1/v1/form.json", handleResponseForm)
-	return mux, nil
+	return mux
 }
 
 // header check
@@ -68,11 +70,10 @@ func checkAuth(response http.ResponseWriter, request *http.Request) {
 	} else if authPassword != userAndPass {
 		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
-
 }
 func checkContentType(response http.ResponseWriter, request *http.Request) {
-	contentType := request.Header.Get("Content-Type")
-	if contentType != "application/json" {
+	contentType := request.Header.Get(CONTENT_TYPE)
+	if contentType != APPLICATION_JSON {
 		http.Error(response, http.StatusText(http.StatusNoContent), http.StatusNoContent)
 	}
 }
@@ -105,12 +106,11 @@ func handleResponseRecordsCursor(response http.ResponseWriter, request *http.Req
 
 func handleResponseRecordComments(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
+	checkContentType(response, request)
 	if request.Method == "POST" {
-		checkContentType(response, request)
 		testData := GetTestDataAddRecordComment()
 		fmt.Fprint(response, testData.output)
 	} else if request.Method == "DELETE" {
-		checkContentType(response, request)
 		testData := GetDataTestDeleteRecordComment()
 		fmt.Fprint(response, testData.output)
 	}
@@ -126,16 +126,14 @@ func handleResponseUploadFile(response http.ResponseWriter, request *http.Reques
 
 func handleResponseGetRecord(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
+	checkContentType(response, request)
 	if request.Method == "GET" {
-		checkContentType(response, request)
 		testData := GetTestDataGetRecord()
 		fmt.Fprint(response, testData.output)
 	} else if request.Method == "PUT" {
-		checkContentType(response, request)
 		testData := GetTestDataUpdateRecordByKey()
 		fmt.Fprint(response, testData.output)
 	} else if request.Method == "POST" {
-		checkContentType(response, request)
 		testData := GetTestDataAddRecord()
 		fmt.Fprint(response, testData.output)
 	}
@@ -144,16 +142,14 @@ func handleResponseGetRecord(response http.ResponseWriter, request *http.Request
 
 func handleResponseGetRecords(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
+	checkContentType(response, request)
 	if request.Method == "GET" {
-		checkContentType(response, request)
 		testData := GetTestDataGetRecords()
 		fmt.Fprint(response, testData.output)
 	} else if request.Method == "DELETE" {
-		checkContentType(response, request)
 		testData := GetTestDataDeleteRecords()
 		fmt.Fprint(response, testData.output)
 	} else if request.Method == "POST" {
-		checkContentType(response, request)
 		testData := GetTestDataAddRecords()
 		fmt.Fprint(response, testData.output)
 	}
@@ -169,10 +165,7 @@ func handleResponseGetRecordsComments(response http.ResponseWriter, request *htt
 }
 
 func TestMain(m *testing.M) {
-	mux, err := createServerMux()
-	if err != nil {
-		fmt.Println("StartServerTest", err)
-	}
+	mux := createServerMux()
 	ts, err := createServerTest(mux)
 	if err != nil {
 		fmt.Println("createServerTest", err)
@@ -193,7 +186,8 @@ func newAppWithGuest() *App {
 	return &App{
 		Domain:       KINTONE_DOMAIN,
 		AppId:        KINTONE_APP_ID,
-		ApiToken:     KINTONE_API_TOKEN,
+		User:         KINTONE_USERNAME,
+		Password:     KINTONE_PASSWORD,
 		GuestSpaceId: KINTONE_GUEST_SPACE_ID,
 	}
 }
@@ -265,7 +259,7 @@ func TestGetRecord(t *testing.T) {
 		}
 	}
 
-	if recs, err := app.GetRecords(nil, "limit 3 offset 3"); err != nil {
+	if recs, err := app.GetRecords(nil, testData.input[0].(string)); err != nil {
 		t.Error(err)
 	} else {
 		if len(recs) > 3 {
