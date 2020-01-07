@@ -59,6 +59,7 @@ func createServerMux() *http.ServeMux {
 	mux.HandleFunc("/k/v1/file.json", handleResponseUploadFile)
 	mux.HandleFunc("/k/v1/record/comment.json", handleResponseRecordComments)
 	mux.HandleFunc("/k/v1/records/cursor.json", handleResponseRecordsCursor)
+	mux.HandleFunc("/k/v1/app/status.json", handleResponseProcess)
 	mux.HandleFunc("/k/v1/form.json", handleResponseForm)
 	mux.HandleFunc("/k/guest/1/v1/form.json", handleResponseForm)
 	return mux
@@ -98,6 +99,12 @@ func checkContentType(response http.ResponseWriter, request *http.Request) {
 }
 
 // handler mux
+func handleResponseProcess(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	TestData := GetTestDataProcess()
+	fmt.Fprint(response, TestData.output)
+}
+
 func handleResponseForm(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
 	if request.Method == "GET" {
@@ -438,5 +445,14 @@ func TestDeleteComment(t *testing.T) {
 		t.Error(err)
 	} else {
 		t.Logf("The comment with id =  %v has been deleted successefully!", uint64(testData.input[0].(int)))
+	}
+}
+
+func TestGetProcess(t *testing.T) {
+	TestData := GetTestDataProcess()
+	app := newApp()
+	_, err := app.GetProcess(TestData.input[0].(string))
+	if err != nil {
+		t.Error("TestGetProcess failed: ", err)
 	}
 }
