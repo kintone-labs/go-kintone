@@ -156,7 +156,6 @@ func handleResponseGetRecord(response http.ResponseWriter, request *http.Request
 		testData := GetTestDataAddRecord()
 		fmt.Fprint(response, testData.output)
 	}
-
 }
 
 func handleResponseGetRecords(response http.ResponseWriter, request *http.Request) {
