@@ -14,72 +14,70 @@ func GetTestDataProcess() *TestData {
 		input: []interface{}{"en"},
 		output: `
 		{
-			"enable": true,
-			"states": {
-					"Not started": {
-							"name": "Not started",
-							"index": "0",
-							"assignee": {
-									"type": "ONE",
-									"entities": [
-									]
-							}
-					},
-					"In progress": {
-							"name": "In progress",
-							"index": "1",
-							"assignee": {
-									"type": "ALL",
-									"entities": [
-											{
-													"entity": {
-															"type": "USER",
-															"code": "user1"
-													},
-													"includeSubs": false
-											},
-											{
-													"entity": {
-															"type": "FIELD_ENTITY",
-															"code": "creator"
-													},
-													"includeSubs": false
-											},
-											{
-													"entity": {
-															"type": "CUSTOM_FIELD",
-															"code": "Boss"
-													},
-													"includeSubs": false
-											}
-									]
-							}
-					},
-					"Completed": {
-							"name": "Completed",
-							"index": "2",
-							"assignee": {
-									"type": "ONE",
-									"entities": [
-									]
-							}
+			"enable":true,
+			"states":{
+				"Not started":{
+					"name":"Not started",
+					"index":"0",
+					"assignee":{
+						"type":"ONE",
+						"entities":[]
 					}
+				},
+				"In progress":{
+					"name":"In progress",
+					"index":"1",
+					"assignee":{
+						"type":"ALL",
+						"entities":[
+							{
+								"entity":{
+									"type":"USER",
+									"code":"user1"
+								},
+								"includeSubs":false
+							},
+							{
+								"entity":{
+									"type":"FIELD_ENTITY",
+									"code":"creator"
+								},
+								"includeSubs":false
+							},
+							{
+								"entity":{
+									"type":"CUSTOM_FIELD",
+									"code":"Boss"
+								},
+								"includeSubs":false
+							}
+						]
+					}
+				},
+				"Completed":{
+					"name":"Completed",
+					"index":"2",
+					"assignee":{
+						"type":"ONE",
+						"entities":[]
+					}
+				}
 			},
-			"actions": [
-					{
-							"name": "Start",
-							"from": "Not started",
-							"to": "In progress",
-							"filterCond": "Record_number = \"1\""
-					},
-					{
-							"name": "Complete",
-							"from": "In progress",
-							"to": "Completed",
-							"filterCond": ""
-					}
+			"actions":[
+				{
+					"name":"Start",
+					"from":"Not started",
+					"to":"In progress",
+					"filterCond":"Record_number = \"1\""
+				},
+				{
+					"name":"Complete",
+					"from":"In progress",
+					"to":"Completed",
+					"filterCond":""
+				}
 			],
-			"revision": "3"
+			"revision":"3"
 		}`,
 	}
 }
