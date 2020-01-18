@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"strconv"
 )
 
 func newApp(appID uint64) *App {
@@ -40,16 +41,64 @@ func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
 	}
 }
 
-func TestGetRecord(t *testing.T) {
-	a := newApp(4799)
+func TestAddRecord(t *testing.T) {
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newApp(appId)
 	if len(a.Password) == 0 {
 		t.Skip()
 	}
 
-	if rec, err := a.GetRecord(116); err != nil {
+	fileKey, err := a.Upload("ほげ春巻.txta", "text/html",
+		bytes.NewReader([]byte(`abc
+<a href="https://www.cybozu.com/">hoge</a>
+`)))
+	if err != nil {
+		t.Error("Upload failed", err)
+	}
+
+	rec := NewRecord(map[string]interface{}{
+		"title": SingleLineTextField("test!"),
+		"key":DecimalField("1"),
+		"file": FileField{
+			{FileKey: fileKey},
+		},
+	})
+	id, err := a.AddRecord(rec)
+	if err != nil {
+		t.Error("AddRecord failed", err)
+	}
+	os.Setenv("KINTONE_TEST_REC_ID", id)
+
+	recs := []*Record{
+		NewRecord(map[string]interface{}{
+			"key":DecimalField("2"),
+			"title": SingleLineTextField("multi add 1"),
+		}),
+		NewRecord(map[string]interface{}{
+			"key":DecimalField("3"),
+			"title": SingleLineTextField("multi add 2"),
+		}),
+	}
+	ids, err := a.AddRecords(recs)
+	if err != nil {
+		t.Error("AddRecords failed", err)
+	} else {
+		t.Log(ids)
+	}
+}
+
+func TestGetRecord(t *testing.T) {
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newApp(appId)
+	if len(a.Password) == 0 {
+		t.Skip()
+	}
+
+	recId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_REC_ID"), 10, 64)
+	if rec, err := a.GetRecord(recId); err != nil {
 		t.Error(err)
 	} else {
-		if rec.Id() != 116 {
+		if rec.Id() != recId {
 			t.Errorf("Unexpected Id: %d", rec.Id())
 		}
 		for _, f := range rec.Fields {
@@ -83,58 +132,24 @@ func TestGetRecord(t *testing.T) {
 	}
 }
 
-func TestAddRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
-
-	fileKey, err := a.Upload("ほげ春巻.txta", "text/html",
-		bytes.NewReader([]byte(`abc
-<a href="https://www.cybozu.com/">hoge</a>
-`)))
-	if err != nil {
-		t.Error("Upload failed", err)
-	}
-
-	rec := NewRecord(map[string]interface{}{
-		"title": SingleLineTextField("test!"),
-		"file": FileField{
-			{FileKey: fileKey},
-		},
-	})
-	_, err = a.AddRecord(rec)
-	if err != nil {
-		t.Error("AddRecord failed", rec)
-	}
-
-	recs := []*Record{
-		NewRecord(map[string]interface{}{
-			"title": SingleLineTextField("multi add 1"),
-		}),
-		NewRecord(map[string]interface{}{
-			"title": SingleLineTextField("multi add 2"),
-		}),
-	}
-	ids, err := a.AddRecords(recs)
-	if err != nil {
-		t.Error("AddRecords failed", recs)
-	} else {
-		t.Log(ids)
-	}
-}
-
 func TestUpdateRecord(t *testing.T) {
-	a := newApp(9004)
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newApp(appId)
 	if len(a.Password) == 0 {
 		t.Skip()
 	}
 
-	rec, err := a.GetRecord(4)
+	recId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_REC_ID"), 10, 64)
+	rec, err := a.GetRecord(recId)
 	if err != nil {
 		t.Fatal(err)
 	}
 	rec.Fields["title"] = SingleLineTextField("new title")
+	delete(rec.Fields, "レコード番号")
+	delete(rec.Fields, "作成者")
+	delete(rec.Fields, "更新者")
+	delete(rec.Fields, "作成日時")
+	delete(rec.Fields, "更新日時")
 	if err := a.UpdateRecord(rec, true); err != nil {
 		t.Error("UpdateRecord failed", err)
 	}
@@ -149,6 +164,11 @@ func TestUpdateRecord(t *testing.T) {
 	}
 	for _, rec := range recs {
 		rec.Fields["title"] = SingleLineTextField(time.Now().String())
+		delete(rec.Fields, "レコード番号")
+		delete(rec.Fields, "作成者")
+		delete(rec.Fields, "更新者")
+		delete(rec.Fields, "作成日時")
+		delete(rec.Fields, "更新日時")
 	}
 	if err := a.UpdateRecords(recs, true); err != nil {
 		t.Error("UpdateRecords failed", err)
@@ -159,20 +179,9 @@ func TestUpdateRecord(t *testing.T) {
 	}
 }
 
-func TestDeleteRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
-
-	ids := []uint64{6, 7}
-	if err := a.DeleteRecords(ids); err != nil {
-		t.Error("DeleteRecords failed", err)
-	}
-}
-
 func TestFields(t *testing.T) {
-	a := newApp(8326)
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newApp(appId)
 	if len(a.Password) == 0 {
 		t.Skip()
 	}
@@ -187,7 +196,8 @@ func TestFields(t *testing.T) {
 }
 
 func TestApiToken(t *testing.T) {
-	a := newAppWithApiToken(9974)
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newAppWithApiToken(appId)
 	if len(a.ApiToken) == 0 {
 		t.Skip()
 	}
@@ -199,7 +209,9 @@ func TestApiToken(t *testing.T) {
 }
 
 func TestGuestSpace(t *testing.T) {
-	a := newAppInGuestSpace(185, 9)
+	guestAppId, _ := strconv.ParseUint(os.Getenv("KINTONE_GUEST_APP_ID"), 10, 64)
+	guestSpaceId, _ := strconv.ParseUint(os.Getenv("KINTONE_GUEST_SPACE_ID"), 10, 64)
+	a := newAppInGuestSpace(guestAppId, guestSpaceId)
 	if len(a.Password) == 0 {
 		t.Skip()
 	}
@@ -210,11 +222,34 @@ func TestGuestSpace(t *testing.T) {
 	}
 }
 
+func TestAddRecordComment(t *testing.T) {
+	recId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_REC_ID"), 10, 64)
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	appTest := newApp(appId)
+	mentionMemberUser := &ObjMention{Code: os.Getenv("KINTONE_USER"), Type: ConstCommentMentionTypeUser}
+	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
+	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
+	var cmt Comment
+	cmt.Text = "Test comment 222"
+	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberUser, mentionDepartmentAdmin}
+
+	for i := 0; i < 20; i++ {
+		cmtID, err := appTest.AddRecordComment(recId, &cmt)
+		if err != nil {
+			t.Error(err)
+		} else {
+			t.Logf("return value(comment-id) is %v", cmtID)
+		}
+	}
+}
+
 func TestGetRecordComments(t *testing.T) {
-	a := newApp(13)
+	recId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_REC_ID"), 10, 64)
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newApp(appId)
 	var offset uint64 = 5
 	var limit uint64 = 10
-	if rec, err := a.GetRecordComments(3, "asc", offset, limit); err != nil {
+	if rec, err := a.GetRecordComments(recId, "asc", offset, limit); err != nil {
 		t.Error(err)
 	} else {
 		if !strings.Contains(rec[0].Id, "6") {
@@ -222,31 +257,31 @@ func TestGetRecordComments(t *testing.T) {
 		}
 	}
 }
-func TestAddRecordComment(t *testing.T) {
-	appTest := newApp(12)
-	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
-	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
-	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
-	var cmt Comment
-	cmt.Text = "Test comment 222"
-	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
-	cmtID, err := appTest.AddRecordComment(2, &cmt)
+
+func TestDeleteComment(t *testing.T) {
+	recId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_REC_ID"), 10, 64)
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	appTest := newApp(appId)
+	var cmtID uint64 = 14
+	err := appTest.DeleteComment(recId, cmtID)
 
 	if err != nil {
 		t.Error(err)
 	} else {
-		t.Logf("return value(comment-id) is %v", cmtID)
+		t.Logf("The comment with id =  %v has been deleted successfully!", cmtID)
 	}
 }
 
-func TestDeleteComment(t *testing.T) {
-	appTest := newApp(4)
-	var cmtID uint64 = 14
-	err := appTest.DeleteComment(3, 12)
+func TestDeleteRecord(t *testing.T) {
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	a := newApp(appId)
+	if len(a.Password) == 0 {
+		t.Skip()
+	}
 
-	if err != nil {
-		t.Error(err)
-	} else {
-		t.Logf("The comment with id =  %v has been deleted successefully!", cmtID)
+	recId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_REC_ID"), 10, 64)
+	ids := []uint64{recId, recId+1, recId+2}
+	if err := a.DeleteRecords(ids); err != nil {
+		t.Error("DeleteRecords failed", err)
 	}
 }
