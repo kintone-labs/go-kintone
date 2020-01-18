@@ -1000,3 +1000,86 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	}
 	return ret, nil
 }
+
+// OpenCursor create cursor for feteching records matching given conditions.
+//
+// If fields is nil, all fields are retrieved.
+// See API specs how to construct query strings.
+func (app *App) OpenCursor(fields []string, query string, size uint64) (cursor *Cursor, err error) {
+	type request_body struct {
+		App    uint64   `json:"app,string"`
+		Fields []string `json:"fields"`
+		Query  string   `json:"query"`
+		Size   uint64   `json:"size,string"`
+	}
+	data, _ := json.Marshal(request_body{app.AppId, fields, query, size})
+	req, err := app.newRequest("POST", "records/cursor", bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err = DecodeCursor(body)
+	if err != nil {
+		return nil, err
+	}
+	return cursor, nil
+}
+
+// ReadCursor reads records from cursor.
+func (app *App) ReadCursor(id string) ([]*Record, error) {
+	type request_body struct {
+		Id  string   `json:"id"`
+	}
+	data, _ := json.Marshal(request_body{id})
+	req, err := app.newRequest("GET", "records/cursor", bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return nil, err
+	}
+	recs, err := DecodeRecords(body)
+	if err != nil {
+		return nil, ErrInvalidResponse
+	}
+	return recs, nil
+}
+
+// CloseCursor delete cursor.
+func (app *App) CloseCursor(id string) (err error) {
+	var resp_body interface{}
+	type request_body struct {
+		Id  string   `json:"id"`
+	}
+	data, _ := json.Marshal(request_body{id})
+	req, err := app.newRequest("DELETE", "records/cursor", bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(body, &resp_body)
+	if err != nil {
+		return err
+	}
+	return nil
+}

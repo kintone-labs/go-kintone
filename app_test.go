@@ -272,6 +272,44 @@ func TestDeleteComment(t *testing.T) {
 	}
 }
 
+func TestOpenCursor(t *testing.T) {
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	appTest := newApp(appId)
+	cursor, err := appTest.OpenCursor(nil, "key >= 2", 1)
+
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("The cursor with id:%v, totalCount:%v is opened successfully!", cursor.Id, cursor.TotalCount)
+		os.Setenv("KINTONE_CURSOR_ID", cursor.Id)
+	}
+}
+
+func TestReadCursor(t *testing.T) {
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	appTest := newApp(appId)
+	if recs, err := appTest.ReadCursor(os.Getenv("KINTONE_CURSOR_ID")); err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("%v", recs)
+		if len(recs) > 1 {
+			t.Error("Too many records")
+		}
+	}
+}
+
+func TestCloseCursor(t *testing.T) {
+	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
+	appTest := newApp(appId)
+	err := appTest.CloseCursor(os.Getenv("KINTONE_CURSOR_ID"))
+
+	if err != nil {
+		t.Error(err)
+	} else {
+		t.Logf("Cursor id:%v is closed successfully!", os.Getenv("KINTONE_CURSOR_ID"))
+	}
+}
+
 func TestDeleteRecord(t *testing.T) {
 	appId, _ := strconv.ParseUint(os.Getenv("KINTONE_TEST_APP_ID"), 10, 64)
 	a := newApp(appId)
