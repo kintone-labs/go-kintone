@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	NAME            = "kintone-go-SDK"
-	VERSION         = "0.2.0"
+	NAME            = "go-kintone"
+	VERSION         = "0.3.0"
 	DEFAULT_TIMEOUT = time.Second * 600 // Default value for App.Timeout
 )
 
@@ -124,7 +124,7 @@ type App struct {
 	basicAuth         bool          // true to use Basic Authentication.
 	basicAuthUser     string        // User name for Basic Authentication.
 	basicAuthPassword string        // Password for Basic Authentication.
-	userAgentHeader   string        // User-agent request header string
+	extUserAgent      string        // User-agent request header string
 }
 
 // SetBasicAuth enables use of HTTP basic authentication for access
@@ -152,12 +152,71 @@ func (app *App) GetBasicAuthPassword() string {
 
 // SetUserAgentHeader set custom user-agent header for http request
 func (app *App) SetUserAgentHeader(userAgentHeader string) {
-	app.userAgentHeader = userAgentHeader
+	app.extUserAgent = userAgentHeader
 }
 
 // GetUserAgentHeader get user-agent header string
 func (app *App) GetUserAgentHeader() string {
-	return app.userAgentHeader
+	userAgent := NAME + "/" + VERSION
+	if len(app.extUserAgent) > 0 {
+		return userAgent + " " + app.extUserAgent
+	}
+	return userAgent
+}
+
+func (app *App) createUrl(api string, query string) url.URL {
+	path := fmt.Sprintf("/k/v1/%s.json", api)
+	if app.GuestSpaceId > 0 {
+		path = fmt.Sprintf("/k/guest/%d/v1/%s.json", app.GuestSpaceId, api)
+	}
+
+	resultUrl := url.URL{
+		Scheme: "https",
+		Host:   app.Domain,
+		Path:   path,
+	}
+
+	if len(query) > 0 {
+		resultUrl.RawQuery = query
+	}
+	return resultUrl
+}
+func (app *App) setAuth(request *http.Request) {
+	if app.basicAuth {
+		request.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
+	}
+
+	if len(app.ApiToken) > 0 {
+		request.Header.Set("X-Cybozu-API-Token", app.ApiToken)
+	}
+
+	if len(app.User) > 0 && len(app.Password) > 0 {
+		request.Header.Set("X-Cybozu-Authorization", base64.StdEncoding.EncodeToString(
+			[]byte(app.User+":"+app.Password)))
+	}
+}
+
+//NewRequest create a request connect to kintone api.
+func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
+	bodyData := io.Reader(nil)
+	if body != nil {
+		bodyData = body
+	}
+
+	request, err := http.NewRequest(method, url, bodyData)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("User-Agent", app.GetUserAgentHeader())
+
+	if method != "GET" {
+		request.Header.Set("Content-Type", "application/json")
+	}
+
+	app.setAuth(request)
+
+	return request, nil
 }
 
 func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, error) {
@@ -191,12 +250,8 @@ func (app *App) newRequest(method, api string, body io.Reader) (*http.Request, e
 		req.Header.Set("X-Cybozu-API-Token", app.ApiToken)
 	}
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", app.GetUserAgentHeader())
 
-	if len(app.GetUserAgentHeader()) != 0 {
-		req.Header.Set("User-Agent", app.userAgentHeader)
-	} else {
-		req.Header.Set("User-Agent", NAME+"/"+VERSION)
-	}
 	return req, nil
 }
 
@@ -999,4 +1054,83 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		ret[fi.Code] = fi
 	}
 	return ret, nil
+}
+
+//CreateCursor return the meta data of the Cursor in this application
+func (app *App) CreateCursor(fields []string, query string, size uint64) (*Cursor, error) {
+	type cursor struct {
+		App    uint64   `json:"app"`
+		Fields []string `json:"fields"`
+		Size   uint64   `json:"size"`
+		Query  string   `json:"query"`
+	}
+	data := cursor{App: app.AppId, Fields: fields, Size: size, Query: query}
+	jsonData, _ := json.Marshal(data)
+	url := app.createUrl("records/cursor", "")
+	request, err := app.NewRequest("POST", url.String(), bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	response, err := app.do(request)
+	if err != nil {
+		return nil, err
+	}
+	body, err := parseResponse(response)
+	if err != nil {
+		return nil, err
+	}
+	result, err := decodeCursor(body)
+	return result, nil
+}
+
+// DeleteCursor - Delete cursor by id
+func (app *App) DeleteCursor(id string) error {
+	type requestBody struct {
+		Id string `json:"id"`
+	}
+	data, err := json.Marshal(requestBody{Id: id})
+	if err != nil {
+		return err
+	}
+
+	url := app.createUrl("records/cursor", "")
+	request, err := app.NewRequest("DELETE", url.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+
+	response, err := app.do(request)
+	if err != nil {
+		return err
+	}
+
+	_, err = parseResponse(response)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+//Using Cursor Id to get all records
+//GetRecordsByCursor return the meta data of the Record in this application
+func (app *App) GetRecordsByCursor(id string) (*GetRecordsCursorResponse, error) {
+	url := app.createUrl("records/cursor", "id="+id)
+	request, err := app.NewRequest("GET", url.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	response, err := app.do(request)
+	if err != nil {
+		return nil, err
+	}
+	data, err := parseResponse(response)
+	if err != nil {
+		return nil, err
+	}
+	recordsCursorResponse, err := DecodeGetRecordsCursorResponse(data)
+	if err != nil {
+		return nil, err
+	}
+	return recordsCursorResponse, nil
 }

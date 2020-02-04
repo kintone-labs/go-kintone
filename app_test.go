@@ -5,94 +5,231 @@
 package kintone
 
 import (
-	"bytes"
+	"crypto/tls"
+	"encoding/base64"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
-func newApp(appID uint64) *App {
-	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		User:     os.Getenv("KINTONE_USER"),
-		Password: os.Getenv("KINTONE_PASSWORD"),
-		AppId:    appID,
+const (
+	KINTONE_DOMAIN         = "localhost:8088"
+	KINTONE_USERNAME       = "test"
+	KINTONE_PASSWORD       = "test"
+	KINTONE_APP_ID         = 1
+	KINTONE_API_TOKEN      = "1e42da75-8432-4adb-9a2b-dbb6e7cb3c6b"
+	KINTONE_GUEST_SPACE_ID = 1
+	AUTH_HEADER_TOKEN      = "X-Cybozu-API-Token"
+	AUTH_HEADER_PASSWORD   = "X-Cybozu-Authorization"
+	AUTH_HEADER_BASIC      = "Authorization"
+	CONTENT_TYPE           = "Content-Type"
+	APPLICATION_JSON       = "application/json"
+	BASIC_AUTH             = true
+	BASIC_AUTH_USER        = "basic"
+	BASIC_AUTH_PASSWORD    = "basic"
+)
+
+func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
+	ts := httptest.NewUnstartedServer(mux)
+	listen, err := net.Listen("tcp", KINTONE_DOMAIN)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ts.Listener.Close()
+	ts.Listener = listen
+	ts.StartTLS()
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	return ts, nil
+}
+
+func createServerMux() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/k/v1/record.json", handleResponseGetRecord)
+	mux.HandleFunc("/k/v1/records.json", handleResponseGetRecords)
+	mux.HandleFunc("/k/v1/record/comments.json", handleResponseGetRecordsComments)
+	mux.HandleFunc("/k/v1/file.json", handleResponseUploadFile)
+	mux.HandleFunc("/k/v1/record/comment.json", handleResponseRecordComments)
+	mux.HandleFunc("/k/v1/records/cursor.json", handleResponseRecordsCursor)
+	mux.HandleFunc("/k/v1/app/status.json", handleResponseProcess)
+	mux.HandleFunc("/k/v1/form.json", handleResponseForm)
+	mux.HandleFunc("/k/guest/1/v1/form.json", handleResponseForm)
+	return mux
+}
+
+// header check
+func checkAuth(response http.ResponseWriter, request *http.Request) {
+	authPassword := request.Header.Get(AUTH_HEADER_PASSWORD)
+	authToken := request.Header.Get(AUTH_HEADER_TOKEN)
+	authBasic := request.Header.Get(AUTH_HEADER_BASIC)
+
+	userAndPass := base64.StdEncoding.EncodeToString(
+		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
+
+	userAndPassBasic := "Basic " + base64.StdEncoding.EncodeToString(
+		[]byte(BASIC_AUTH_USER+":"+BASIC_AUTH_PASSWORD))
+
+	if authToken == "" && authPassword == "" && authBasic == "" {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	}
+	if BASIC_AUTH && authBasic != "" && authBasic != userAndPassBasic {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	}
+	if authToken != "" && authToken != KINTONE_API_TOKEN {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+	}
+	if authPassword != "" && authPassword != userAndPass {
+		http.Error(response, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	}
 }
 
-func newAppWithApiToken(appId uint64) *App {
-	return &App{
-		Domain:   os.Getenv("KINTONE_DOMAIN"),
-		ApiToken: os.Getenv("KINTONE_API_TOKEN"),
-		AppId:    appId,
+func checkContentType(response http.ResponseWriter, request *http.Request) {
+	contentType := request.Header.Get(CONTENT_TYPE)
+	if contentType != APPLICATION_JSON {
+		http.Error(response, http.StatusText(http.StatusNoContent), http.StatusNoContent)
 	}
 }
 
-func newAppInGuestSpace(appId uint64, guestSpaceId uint64) *App {
-	return &App{
-		Domain:       os.Getenv("KINTONE_DOMAIN"),
-		User:         os.Getenv("KINTONE_USER"),
-		Password:     os.Getenv("KINTONE_PASSWORD"),
-		AppId:        appId,
-		GuestSpaceId: guestSpaceId,
+// handler mux
+func handleResponseProcess(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	TestData := GetTestDataProcess()
+	fmt.Fprint(response, TestData.output)
+}
+
+func handleResponseForm(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "GET" {
+		checkContentType(response, request)
+		testData := GetDataTestForm()
+		fmt.Fprint(response, testData.output)
 	}
 }
 
-func TestGetRecord(t *testing.T) {
-	a := newApp(4799)
-	if len(a.Password) == 0 {
-		t.Skip()
+func handleResponseRecordsCursor(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "GET" {
+		testData := GetDataTestGetRecordsByCursor()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "DELETE" {
+		checkContentType(response, request)
+		testData := GetTestDataDeleteCursor()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "POST" {
+		checkContentType(response, request)
+		testData := GetTestDataCreateCursor()
+		fmt.Fprint(response, testData.output)
 	}
+}
 
-	if rec, err := a.GetRecord(116); err != nil {
-		t.Error(err)
-	} else {
-		if rec.Id() != 116 {
-			t.Errorf("Unexpected Id: %d", rec.Id())
-		}
-		for _, f := range rec.Fields {
-			if files, ok := f.(FileField); ok {
-				if len(files) == 0 {
-					continue
-				}
-				fd, err := a.Download(files[0].FileKey)
-				if err != nil {
-					t.Error(err)
-				} else {
-					data, _ := ioutil.ReadAll(fd.Reader)
-					t.Logf("%s %d bytes", fd.ContentType, len(data))
-				}
-			}
-		}
+func handleResponseRecordComments(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	checkContentType(response, request)
+	if request.Method == "POST" {
+		testData := GetTestDataAddRecordComment()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "DELETE" {
+		testData := GetDataTestDeleteRecordComment()
+		fmt.Fprint(response, testData.output)
 	}
+}
 
-	if recs, err := a.GetRecords(nil, "limit 3 offset 3"); err != nil {
-		t.Error(err)
-	} else {
-		if len(recs) > 3 {
-			t.Error("Too many records")
-		}
+func handleResponseUploadFile(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	if request.Method == "POST" {
+		testData := GetDataTestUploadFile()
+		fmt.Fprint(response, testData.output)
 	}
+}
 
-	if recs, err := a.GetAllRecords([]string{"レコード番号"}); err != nil {
-		t.Error(err)
-	} else {
-		t.Log(len(recs))
+func handleResponseGetRecord(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	checkContentType(response, request)
+	if request.Method == "GET" {
+		testData := GetTestDataGetRecord()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "PUT" {
+		testData := GetTestDataUpdateRecordByKey()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "POST" {
+		testData := GetTestDataAddRecord()
+		fmt.Fprint(response, testData.output)
+	}
+}
+
+func handleResponseGetRecords(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	checkContentType(response, request)
+	if request.Method == "GET" {
+		testData := GetTestDataGetRecords()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "DELETE" {
+		testData := GetTestDataDeleteRecords()
+		fmt.Fprint(response, testData.output)
+	} else if request.Method == "POST" {
+		testData := GetTestDataAddRecords()
+		fmt.Fprint(response, testData.output)
+	}
+}
+
+func handleResponseGetRecordsComments(response http.ResponseWriter, request *http.Request) {
+	checkAuth(response, request)
+	checkContentType(response, request)
+	testData := GetDataTestRecordComments()
+	fmt.Fprint(response, testData.output)
+}
+
+func TestMain(m *testing.M) {
+	mux := createServerMux()
+	ts, err := createServerTest(mux)
+	if err != nil {
+		fmt.Println("createServerTest: ", err)
+		os.Exit(1)
+	}
+	code := m.Run()
+	ts.Close()
+	os.Exit(code)
+}
+
+func newApp() *App {
+	return &App{
+		Domain:   KINTONE_DOMAIN,
+		User:     KINTONE_USERNAME,
+		Password: KINTONE_PASSWORD,
+		AppId:    KINTONE_APP_ID,
+	}
+}
+func newAppWithGuest() *App {
+	return &App{
+		Domain:       KINTONE_DOMAIN,
+		AppId:        KINTONE_APP_ID,
+		User:         KINTONE_USERNAME,
+		Password:     KINTONE_PASSWORD,
+		GuestSpaceId: KINTONE_GUEST_SPACE_ID,
+	}
+}
+func newAppWithToken() *App {
+	return &App{
+		AppId:    KINTONE_APP_ID,
+		Domain:   KINTONE_DOMAIN,
+		ApiToken: KINTONE_API_TOKEN,
 	}
 }
 
 func TestAddRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
+	testData := GetDataTestAddRecord()
+	app := newApp()
 
-	fileKey, err := a.Upload("ほげ春巻.txta", "text/html",
-		bytes.NewReader([]byte(`abc
-<a href="https://www.cybozu.com/">hoge</a>
-`)))
+	fileKey, err := app.Upload(testData.input[0].(string), testData.input[2].(string),
+		testData.input[1].(io.Reader))
 	if err != nil {
 		t.Error("Upload failed", err)
 	}
@@ -103,11 +240,10 @@ func TestAddRecord(t *testing.T) {
 			{FileKey: fileKey},
 		},
 	})
-	_, err = a.AddRecord(rec)
+	_, err = app.AddRecord(rec)
 	if err != nil {
 		t.Error("AddRecord failed", rec)
 	}
-
 	recs := []*Record{
 		NewRecord(map[string]interface{}{
 			"title": SingleLineTextField("multi add 1"),
@@ -116,68 +252,137 @@ func TestAddRecord(t *testing.T) {
 			"title": SingleLineTextField("multi add 2"),
 		}),
 	}
-	ids, err := a.AddRecords(recs)
+	ids, err := app.AddRecords(recs)
 	if err != nil {
 		t.Error("AddRecords failed", recs)
 	} else {
 		t.Log(ids)
 	}
 }
-
-func TestUpdateRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
+func TestGetRecord(t *testing.T) {
+	testData := GetTestDataGetRecord()
+	testDataRecords := GetTestDataGetRecords()
+	app := newApp()
+	if rec, err := app.GetRecord(uint64(testData.input[0].(int))); err != nil {
+		t.Error(err)
+	} else {
+		if rec.Id() != 1 {
+			t.Errorf("Unexpected Id: %d", rec.Id())
+		}
+		for _, f := range rec.Fields {
+			if files, ok := f.(FileField); ok {
+				if len(files) == 0 {
+					continue
+				}
+				fd, err := app.Download(files[0].FileKey)
+				if err != nil {
+					t.Error(err)
+				} else {
+					data, _ := ioutil.ReadAll(fd.Reader)
+					t.Logf("%s %d bytes", fd.ContentType, len(data))
+				}
+			}
+		}
 	}
 
-	rec, err := a.GetRecord(4)
+	if recs, err := app.GetRecords(testDataRecords.input[0].([]string), testDataRecords.input[1].(string)); err != nil {
+		t.Error(err)
+	} else {
+		if len(recs) > 3 {
+			t.Error("Too many records")
+		}
+	}
+
+	if recs, err := app.GetAllRecords(testDataRecords.input[0].([]string)); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(len(recs))
+	}
+
+}
+func TestUpdateRecord(t *testing.T) {
+	testData := GetTestDataGetRecord()
+	testDataRecords := GetTestDataGetRecords()
+	testDataRecordByKey := GetTestDataUpdateRecordByKey()
+
+	app := newApp()
+
+	rec, err := app.GetRecord(uint64(testData.input[0].(int)))
 	if err != nil {
 		t.Fatal(err)
 	}
 	rec.Fields["title"] = SingleLineTextField("new title")
-	if err := a.UpdateRecord(rec, true); err != nil {
+	if err := app.UpdateRecord(rec, testData.input[1].(bool)); err != nil {
 		t.Error("UpdateRecord failed", err)
 	}
 
-	if err := a.UpdateRecordByKey(rec, true, "key"); err != nil {
+	rec.Fields[testDataRecordByKey.input[1].(string)] = SingleLineTextField(` {
+		"field": "unique_key",
+		"value": "unique_code"
+	}`)
+	if err := app.UpdateRecordByKey(rec, testData.input[1].(bool), testDataRecordByKey.input[1].(string)); err != nil {
 		t.Error("UpdateRecordByKey failed", err)
 	}
-
-	recs, err := a.GetRecords(nil, "limit 3")
+	recs, err := app.GetRecords(testDataRecords.input[0].([]string), testDataRecords.input[1].(string))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	for _, rec := range recs {
 		rec.Fields["title"] = SingleLineTextField(time.Now().String())
+		rec.Fields["key"] = SingleLineTextField(` {
+			"field": "unique_key",
+			"value": "unique_code"
+	}`)
 	}
-	if err := a.UpdateRecords(recs, true); err != nil {
+	if err := app.UpdateRecords(recs, testData.input[1].(bool)); err != nil {
 		t.Error("UpdateRecords failed", err)
 	}
 
-	if err := a.UpdateRecordsByKey(recs, true, "key"); err != nil {
+	if err := app.UpdateRecordsByKey(recs, testDataRecordByKey.input[2].(bool), testDataRecordByKey.input[1].(string)); err != nil {
 		t.Error("UpdateRecordsByKey failed", err)
 	}
 }
 
 func TestDeleteRecord(t *testing.T) {
-	a := newApp(9004)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
-
-	ids := []uint64{6, 7}
-	if err := a.DeleteRecords(ids); err != nil {
+	testData := GetTestDataDeleteRecords()
+	app := newApp()
+	if err := app.DeleteRecords(testData.input[0].([]uint64)); err != nil {
 		t.Error("DeleteRecords failed", err)
 	}
 }
 
-func TestFields(t *testing.T) {
-	a := newApp(8326)
-	if len(a.Password) == 0 {
-		t.Skip()
+func TestGetRecordsByCursor(t *testing.T) {
+	testData := GetDataTestGetRecordsByCursor()
+	app := newApp()
+	_, err := app.GetRecordsByCursor(testData.input[0].(string))
+	if err != nil {
+		t.Errorf("TestGetCursor is failed: %v", err)
 	}
 
-	fi, err := a.Fields()
+}
+
+func TestDeleteCursor(t *testing.T) {
+	testData := GetTestDataDeleteCursor()
+	app := newApp()
+	err := app.DeleteCursor(testData.input[0].(string))
+	if err != nil {
+		t.Errorf("TestDeleteCursor is failed: %v", err)
+	}
+}
+
+func TestCreateCursor(t *testing.T) {
+	testData := GetTestDataCreateCursor()
+	app := newApp()
+	_, err := app.CreateCursor(testData.input[0].([]string), testData.input[1].(string), uint64(testData.input[2].(int)))
+	if err != nil {
+		t.Errorf("TestCreateCurSor is failed: %v", err)
+	}
+}
+
+func TestFields(t *testing.T) {
+	app := newApp()
+	fi, err := app.Fields()
 	if err != nil {
 		t.Error("Fields failed", err)
 	}
@@ -187,50 +392,43 @@ func TestFields(t *testing.T) {
 }
 
 func TestApiToken(t *testing.T) {
-	a := newAppWithApiToken(9974)
-	if len(a.ApiToken) == 0 {
-		t.Skip()
-	}
-
-	_, err := a.Fields()
+	app := newAppWithToken()
+	_, err := app.Fields()
 	if err != nil {
 		t.Error("Api token failed", err)
 	}
 }
 
 func TestGuestSpace(t *testing.T) {
-	a := newAppInGuestSpace(185, 9)
-	if len(a.Password) == 0 {
-		t.Skip()
-	}
-
-	_, err := a.Fields()
+	app := newAppWithGuest()
+	_, err := app.Fields()
 	if err != nil {
 		t.Error("GuestSpace failed", err)
 	}
 }
 
 func TestGetRecordComments(t *testing.T) {
-	a := newApp(13)
-	var offset uint64 = 5
-	var limit uint64 = 10
-	if rec, err := a.GetRecordComments(3, "asc", offset, limit); err != nil {
+	testData := GetDataTestRecordComments()
+	app := newApp()
+	if rec, err := app.GetRecordComments(uint64(testData.input[0].(int)), testData.input[1].(string), uint64(testData.input[2].(int)), uint64(testData.input[3].(int))); err != nil {
 		t.Error(err)
 	} else {
-		if !strings.Contains(rec[0].Id, "6") {
-			t.Errorf("the first comment id mismatch. expected is 6 but actual %v", rec[0].Id)
+		if !strings.Contains(rec[0].Id, "3") {
+			t.Errorf("the first comment id mismatch. expected is 3 but actual %v", rec[0].Id)
 		}
 	}
 }
+
 func TestAddRecordComment(t *testing.T) {
-	appTest := newApp(12)
+	testData := GetTestDataAddRecordComment()
+	appTest := newApp()
 	mentionMemberCybozu := &ObjMention{Code: "cybozu", Type: ConstCommentMentionTypeUser}
 	mentionGroupAdmin := &ObjMention{Code: "Administrators", Type: ConstCommentMentionTypeGroup}
 	mentionDepartmentAdmin := &ObjMention{Code: "Admin", Type: ConstCommentMentionTypeDepartment}
 	var cmt Comment
 	cmt.Text = "Test comment 222"
 	cmt.Mentions = []*ObjMention{mentionGroupAdmin, mentionMemberCybozu, mentionDepartmentAdmin}
-	cmtID, err := appTest.AddRecordComment(2, &cmt)
+	cmtID, err := appTest.AddRecordComment(uint64(testData.input[0].(int)), &cmt)
 
 	if err != nil {
 		t.Error(err)
@@ -240,13 +438,21 @@ func TestAddRecordComment(t *testing.T) {
 }
 
 func TestDeleteComment(t *testing.T) {
-	appTest := newApp(4)
-	var cmtID uint64 = 14
-	err := appTest.DeleteComment(3, 12)
-
+	testData := GetDataTestDeleteRecordComment()
+	appTest := newApp()
+	err := appTest.DeleteComment(uint64(testData.input[0].(int)), uint64(testData.input[1].(int)))
 	if err != nil {
 		t.Error(err)
 	} else {
-		t.Logf("The comment with id =  %v has been deleted successefully!", cmtID)
+		t.Logf("The comment with id =  %v has been deleted successefully!", uint64(testData.input[0].(int)))
+	}
+}
+
+func TestGetProcess(t *testing.T) {
+	TestData := GetTestDataProcess()
+	app := newApp()
+	_, err := app.GetProcess(TestData.input[0].(string))
+	if err != nil {
+		t.Error("TestGetProcess failed: ", err)
 	}
 }
