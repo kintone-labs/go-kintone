@@ -552,7 +552,7 @@ func escapeQuotes(s string) string {
 //
 // If successfully uploaded, the key string of the uploaded file is returned.
 func (app *App) Upload(fileName, contentType string, data io.Reader) (key string, err error) {
-	f, err := ioutil.TempFile("", "hoge")
+	f, err := ioutil.TempFile("", "go-kintone-")
 	if err != nil {
 		return
 	}
