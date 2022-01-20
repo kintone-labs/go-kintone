@@ -10,10 +10,10 @@ See https://developer.kintone.io for API specs.
 	)
 	...
 	app := &kintone.App{
-		"example.cybozu.com",
-		"user1",
-		"password",
-		25,
+		Domain:   "example.cybozu.com",
+		User:     "user1",
+		Password: "password",
+		AppId:    25,
 	}
 
 To retrieve 3 records from a kintone app (id=25):
