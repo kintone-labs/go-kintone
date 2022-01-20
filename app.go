@@ -57,6 +57,7 @@ func (e *AppError) Error() string {
 type UpdateKeyField interface {
 	JSONValue() interface{}
 }
+
 type UpdateKey struct {
 	FieldCode string
 	Field     UpdateKeyField
@@ -181,6 +182,7 @@ func (app *App) createUrl(api string, query string) url.URL {
 	}
 	return resultUrl
 }
+
 func (app *App) setAuth(request *http.Request) {
 	if app.basicAuth {
 		request.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
@@ -196,7 +198,7 @@ func (app *App) setAuth(request *http.Request) {
 	}
 }
 
-//NewRequest create a request connect to kintone api.
+// NewRequest create a request connect to kintone api.
 func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
 	bodyData := io.Reader(nil)
 	if body != nil {
@@ -321,18 +323,18 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 			}
 		}
 
-		//Get other than the Errors property
+		// Get other than the Errors property
 		var ae AppError
 		json.Unmarshal(body, &ae)
 		ae.HttpStatus = resp.Status
 		ae.HttpStatusCode = resp.StatusCode
 
-		//Get the Errors property
+		// Get the Errors property
 		var errors interface{}
 		json.Unmarshal(body, &errors)
 		msg := errors.(map[string]interface{})
 		v, ok := msg["errors"]
-		//If the Errors property exists
+		// If the Errors property exists
 		if ok {
 			result, err := json.Marshal(v)
 			if err != nil {
@@ -1015,7 +1017,8 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		t.MaxValue, t.MinValue, t.MaxLength, t.MinLength,
 		t.Default, t.DefaultTime, t.Options, t.Expression,
 		(t.Separator == "true"),
-		t.Medium, t.Format, t.Fields}
+		t.Medium, t.Format, t.Fields,
+	}
 	return nil
 }
 
@@ -1049,14 +1052,14 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	}
 
 	ret := make(map[string]*FieldInfo)
-	for i, _ := range t.Properties {
+	for i := range t.Properties {
 		fi := &(t.Properties[i])
 		ret[fi.Code] = fi
 	}
 	return ret, nil
 }
 
-//CreateCursor return the meta data of the Cursor in this application
+// CreateCursor return the meta data of the Cursor in this application
 func (app *App) CreateCursor(fields []string, query string, size uint64) (*Cursor, error) {
 	type cursor struct {
 		App    uint64   `json:"app"`
@@ -1112,8 +1115,8 @@ func (app *App) DeleteCursor(id string) error {
 	return nil
 }
 
-//Using Cursor Id to get all records
-//GetRecordsByCursor return the meta data of the Record in this application
+// Using Cursor Id to get all records
+// GetRecordsByCursor return the meta data of the Record in this application
 func (app *App) GetRecordsByCursor(id string) (*GetRecordsCursorResponse, error) {
 	url := app.createUrl("records/cursor", "id="+id)
 	request, err := app.NewRequest("GET", url.String(), nil)
