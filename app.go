@@ -460,7 +460,7 @@ func isAllowedLang(allowedLangs []string, lang string) bool {
 func (app *App) GetProcess(lang string) (process *Process, err error) {
 	type request_body struct {
 		App  uint64 `json:"app,string"`
-		lang string `json:"lang,string"`
+		Lang string `json:"lang,string"`
 	}
 	if app.User == "" || app.Password == "" {
 		err = errors.New("This API only supports password authentication")
