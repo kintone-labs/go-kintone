@@ -33,20 +33,20 @@ type ProcessAction struct {
 
 // ProcessAssignee represents a ProcessState assignee
 type ProcessAssignee struct {
-	Type     string           `json:type`
-	Entities []*ProcessEntity `json:entities`
+	Type     string           `json:"type"`
+	Entities []*ProcessEntity `json:"entities"`
 }
 
 // ProcessEntity represents a process assignee entity
 type ProcessEntity struct {
-	Entity      *Entity `json:entity`
-	IncludeSubs bool    `json:includeSubs`
+	Entity      *Entity `json:"entity"`
+	IncludeSubs bool    `json:"includeSubs"`
 }
 
 // Entity is the concrete representation of a process entity
 type Entity struct {
-	Type string `json:type`
-	Code string `json:code`
+	Type string `json:"type"`
+	Code string `json:"code"`
 }
 
 func DecodeProcess(b []byte) (p *Process, err error) {
