@@ -89,7 +89,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 //
 //	func handler(w http.ResponseWriter, r *http.Request) {
 //		c := appengine.NewContext(r)
-//		app := &kintone.App{urlfetch.Client(c)}
+//		app := &kintone.App{Client: urlfetch.Client(c)}
 //		...
 //	}
 //
@@ -104,7 +104,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 //	func main() {
 //		proxyURL, _ := url.Parse("https://proxy.example.com")
 //		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
-//		client := &http.Client(Transport: transport)
+//		client := &http.Client{Transport: transport}
 //		app := &kintone.App{Client: client}
 //		...
 //	}
