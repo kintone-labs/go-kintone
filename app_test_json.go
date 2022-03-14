@@ -88,6 +88,7 @@ func GetTestDataDeleteRecords() *TestData {
 		output: `{}`,
 	}
 }
+
 func GetTestDataGetRecord() *TestData {
 	return &TestData{
 		input: []interface{}{1, true},
@@ -289,6 +290,7 @@ func GetDataTestDeleteRecordComment() *TestData {
 		output: `{}`,
 	}
 }
+
 func GetTestDataAddRecord() *TestData {
 	return &TestData{
 		output: `{
@@ -324,6 +326,7 @@ func GetDataTestAddRecord() *TestData {
 		}`,
 	}
 }
+
 func getDataTestCreateCursor() *TestData {
 	return &TestData{
 		output: `
@@ -332,10 +335,9 @@ func getDataTestCreateCursor() *TestData {
 		  "totalCount": 123456
 		}`,
 	}
-
 }
-func GetDataTestGetRecordsByCursor() *TestData {
 
+func GetDataTestGetRecordsByCursor() *TestData {
 	return &TestData{
 		input: []interface{}{"9a9716fe-1394-4677-a1c7-2199a5d28215"},
 		output: `
@@ -384,6 +386,7 @@ func GetTestDataAddRecordComment() *TestData {
 		output: `{"id": "4"}`,
 	}
 }
+
 func GetTestDataUpdateRecordByKey() *TestData {
 	return &TestData{
 		input: []interface{}{2, "key", true},

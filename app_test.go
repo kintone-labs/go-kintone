@@ -39,7 +39,6 @@ const (
 func createServerTest(mux *http.ServeMux) (*httptest.Server, error) {
 	ts := httptest.NewUnstartedServer(mux)
 	listen, err := net.Listen("tcp", KINTONE_DOMAIN)
-
 	if err != nil {
 		return nil, err
 	}
@@ -207,6 +206,7 @@ func newApp() *App {
 		AppId:    KINTONE_APP_ID,
 	}
 }
+
 func newAppWithGuest() *App {
 	return &App{
 		Domain:       KINTONE_DOMAIN,
@@ -216,6 +216,7 @@ func newAppWithGuest() *App {
 		GuestSpaceId: KINTONE_GUEST_SPACE_ID,
 	}
 }
+
 func newAppWithToken() *App {
 	return &App{
 		AppId:    KINTONE_APP_ID,
@@ -259,6 +260,7 @@ func TestAddRecord(t *testing.T) {
 		t.Log(ids)
 	}
 }
+
 func TestGetRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
 	testDataRecords := GetTestDataGetRecords()
@@ -298,8 +300,8 @@ func TestGetRecord(t *testing.T) {
 	} else {
 		t.Log(len(recs))
 	}
-
 }
+
 func TestUpdateRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
 	testDataRecords := GetTestDataGetRecords()
@@ -359,7 +361,6 @@ func TestGetRecordsByCursor(t *testing.T) {
 	if err != nil {
 		t.Errorf("TestGetCursor is failed: %v", err)
 	}
-
 }
 
 func TestDeleteCursor(t *testing.T) {
