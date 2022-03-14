@@ -1080,6 +1080,9 @@ func (app *App) CreateCursor(fields []string, query string, size uint64) (*Curso
 		return nil, err
 	}
 	result, err := decodeCursor(body)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
