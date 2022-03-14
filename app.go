@@ -46,6 +46,10 @@ type AppError struct {
 	Errors         string `json:"errors"`  // Error Description.
 }
 
+type AppFormFields struct {
+	Properties interface{} `json:"properties"`
+}
+
 func (e *AppError) Error() string {
 	if len(e.Message) == 0 {
 		return "HTTP error: " + e.HttpStatus
@@ -1019,6 +1023,75 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// Decode JSON from app/form/fields.json
+func decodeFieldInfo(t AppFormFields, ret map[string]*FieldInfo) {
+	itemsMap :=  t.Properties.(map[string]interface{})
+	for k, v := range itemsMap {
+		fi := FieldInfo{}
+		for l, w := range v.(map[string]interface{}) {
+			switch l {
+			case "label":
+				fi.Label = w.(string)
+			case "code":
+				fi.Code = w.(string)
+			case "type":
+				fi.Type = w.(string)
+			case "noLabel":
+				fi.NoLabel = w.(bool)
+			case "required":
+				fi.Required = w.(bool)
+			case "unique":
+				fi.Unique = w.(bool)
+			case "maxValue":
+				fi.MaxValue = w
+			case "minValue":
+				fi.MaxValue = w
+			case "maxLength":
+				fi.MaxLength = w
+			case "minLength":
+				fi.MinLength = w
+			case "defaultValue":
+				fi.Default = w
+			case "defaultNowValue":
+				fi.DefaultTime = w
+			case "options":
+				var sa []string
+				for _, x := range w.(map[string]interface{}) {
+					sa = append(sa, x.(map[string]interface{})["label"].(string))
+				}
+				fi.Options = sa
+			case "expression":
+				fi.Expression = w.(string)
+			case "digit":
+				fi.Separator = w.(bool)
+			case "protocol":
+				fi.Medium = w.(string)
+			case "format":
+				fi.Format = w.(string)
+			case "fields":
+				ret := make(map[string]*FieldInfo)
+				var y AppFormFields
+				y.Properties = w
+			  decodeFieldInfo(y, ret)
+        var sb []FieldInfo
+				for z, _ := range ret {
+        	sb = append(sb, *ret[z])
+        }
+        fi.Fields = sb
+			default: break;
+			}
+		}
+		switch fi.Type {
+		case "GROUP":
+			// Do not add to []FieldInfo
+		case "REFERENCE_TABLE":
+			// Do not add to []FieldInfo
+		default:
+			ret[k] = &fi
+		}
+	}
+}
+
 // Fields returns the meta data of the fields in this application.
 //
 // If successful, a mapping between field codes and FieldInfo is returned.
@@ -1027,7 +1100,7 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		App uint64 `json:"app,string"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId})
-	req, err := app.newRequest("GET", "form", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "app/form/fields", bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
@@ -1040,19 +1113,15 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		return nil, err
 	}
 
-	var t struct {
-		Properties []FieldInfo `json:"properties"`
-	}
+	var t AppFormFields
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return nil, ErrInvalidResponse
 	}
 
 	ret := make(map[string]*FieldInfo)
-	for i, _ := range t.Properties {
-		fi := &(t.Properties[i])
-		ret[fi.Code] = fi
-	}
+	decodeFieldInfo(t, ret)
+
 	return ret, nil
 }
 
