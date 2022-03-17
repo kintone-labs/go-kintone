@@ -44,9 +44,11 @@ const (
 
 // SingleLineTextField is a field type for single-line texts.
 type SingleLineTextField string
-func (f SingleLineTextField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f SingleLineTextField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f SingleLineTextField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_SINGLE_LINE_TEXT,
@@ -56,9 +58,11 @@ func (f SingleLineTextField) MarshalJSON() ([]byte, error) {
 
 // MultiLineTextField is a field type for multi-line texts.
 type MultiLineTextField string
-func (f MultiLineTextField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f MultiLineTextField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f MultiLineTextField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_MULTI_LINE_TEXT,
@@ -68,9 +72,11 @@ func (f MultiLineTextField) MarshalJSON() ([]byte, error) {
 
 // RichTextField is a field type for HTML rich texts.
 type RichTextField string
-func (f RichTextField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f RichTextField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f RichTextField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_RICH_TEXT,
@@ -80,9 +86,11 @@ func (f RichTextField) MarshalJSON() ([]byte, error) {
 
 // DecimalField is a field type for decimal numbers.
 type DecimalField string
-func (f DecimalField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f DecimalField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f DecimalField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_DECIMAL,
@@ -92,9 +100,11 @@ func (f DecimalField) MarshalJSON() ([]byte, error) {
 
 // CalcField is a field type for auto-calculated values.
 type CalcField string
-func (f CalcField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f CalcField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f CalcField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_CALC,
@@ -104,9 +114,11 @@ func (f CalcField) MarshalJSON() ([]byte, error) {
 
 // CheckBoxField is a field type for selected values in a check-box.
 type CheckBoxField []string
-func (f CheckBoxField) JSONValue() (interface{}) {
-	return []string(f);
+
+func (f CheckBoxField) JSONValue() interface{} {
+	return []string(f)
 }
+
 func (f CheckBoxField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_CHECK_BOX,
@@ -116,9 +128,11 @@ func (f CheckBoxField) MarshalJSON() ([]byte, error) {
 
 // RadioButtonField is a field type for the selected value by a radio-button.
 type RadioButtonField string
-func (f RadioButtonField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f RadioButtonField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f RadioButtonField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_RADIO,
@@ -131,13 +145,15 @@ type SingleSelectField struct {
 	String string // Selected value.
 	Valid  bool   // If not selected, false.
 }
-func (f SingleSelectField) JSONValue() (interface{}) {
+
+func (f SingleSelectField) JSONValue() interface{} {
 	if f.Valid {
 		return f.String
 	} else {
 		return nil
 	}
 }
+
 func (f SingleSelectField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_SINGLE_SELECT,
@@ -147,9 +163,11 @@ func (f SingleSelectField) MarshalJSON() ([]byte, error) {
 
 // MultiSelectField is a field type for selected values in a selection box.
 type MultiSelectField []string
-func (f MultiSelectField) JSONValue() (interface{}) {
-	return []string(f);
+
+func (f MultiSelectField) JSONValue() interface{} {
+	return []string(f)
 }
+
 func (f MultiSelectField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_MULTI_SELECT,
@@ -164,6 +182,7 @@ type File struct {
 	Name        string `json:"name"`        // File name
 	Size        uint64 `json:"size,string"` // The file size
 }
+
 func (f *File) MarshalJSON() ([]byte, error) {
 	return json.Marshal(
 		map[string]interface{}{
@@ -176,9 +195,11 @@ func (f *File) MarshalJSON() ([]byte, error) {
 
 // FileField is a field type for uploaded files.
 type FileField []File
-func (f FileField) JSONValue() (interface{}) {
-	return []File(f);
+
+func (f FileField) JSONValue() interface{} {
+	return []File(f)
 }
+
 func (f FileField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_FILE,
@@ -188,9 +209,11 @@ func (f FileField) MarshalJSON() ([]byte, error) {
 
 // LinkField is a field type for hyper-links.
 type LinkField string
-func (f LinkField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f LinkField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f LinkField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_LINK,
@@ -211,13 +234,15 @@ func NewDateField(year int, month time.Month, day int) DateField {
 		true,
 	}
 }
-func (f DateField) JSONValue() (interface{}) {
+
+func (f DateField) JSONValue() interface{} {
 	if f.Valid {
-		return f.Date.Format("2006-01-02");
+		return f.Date.Format("2006-01-02")
 	} else {
-		return nil;
+		return nil
 	}
 }
+
 func (f DateField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_DATE,
@@ -238,13 +263,15 @@ func NewTimeField(hour, min int) TimeField {
 		true,
 	}
 }
-func (f TimeField) JSONValue() (interface{}) {
+
+func (f TimeField) JSONValue() interface{} {
 	if f.Valid {
-		return f.Time.Format("15:04:05");
+		return f.Time.Format("15:04:05")
 	} else {
-		return nil;
+		return nil
 	}
 }
+
 func (f TimeField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_TIME,
@@ -265,13 +292,15 @@ func NewDateTimeField(year int, month time.Month, day, hour, min int) DateTimeFi
 		true,
 	}
 }
-func (f DateTimeField) JSONValue() (interface{}) {
+
+func (f DateTimeField) JSONValue() interface{} {
 	if f.Valid {
-		return f.Time.Format(time.RFC3339);
+		return f.Time.Format(time.RFC3339)
 	} else {
-		return nil;
+		return nil
 	}
 }
+
 func (f DateTimeField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_DATETIME,
@@ -287,9 +316,11 @@ type User struct {
 
 // UserField is a field type for user entries.
 type UserField []User
-func (f UserField) JSONValue() (interface{}) {
-	return []User(f);
+
+func (f UserField) JSONValue() interface{} {
+	return []User(f)
 }
+
 func (f UserField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_USER,
@@ -305,9 +336,11 @@ type Organization struct {
 
 // OrganizationField is a field type for department entries.
 type OrganizationField []Organization
-func (f OrganizationField) JSONValue() (interface{}) {
-	return []Organization(f);
+
+func (f OrganizationField) JSONValue() interface{} {
+	return []Organization(f)
 }
+
 func (f OrganizationField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_ORGANIZATION,
@@ -323,9 +356,11 @@ type Group struct {
 
 // GroupField is a field type for group(or role) entries.
 type GroupField []Group
-func (f GroupField) JSONValue() (interface{}) {
-	return []Group(f);
+
+func (f GroupField) JSONValue() interface{} {
+	return []Group(f)
 }
+
 func (f GroupField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_GROUP,
@@ -335,9 +370,11 @@ func (f GroupField) MarshalJSON() ([]byte, error) {
 
 // CategoryField is a list of category names.
 type CategoryField []string
-func (f CategoryField) JSONValue() (interface{}) {
-	return []string(f);
+
+func (f CategoryField) JSONValue() interface{} {
+	return []string(f)
 }
+
 func (f CategoryField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_CATEGORY,
@@ -347,9 +384,11 @@ func (f CategoryField) MarshalJSON() ([]byte, error) {
 
 // StatusField is a string label of a record status.
 type StatusField string
-func (f StatusField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f StatusField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f StatusField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_STATUS,
@@ -359,9 +398,11 @@ func (f StatusField) MarshalJSON() ([]byte, error) {
 
 // AssigneeField is a list of user entries who are assigned to a record.
 type AssigneeField []User
-func (f AssigneeField) JSONValue() (interface{}) {
-	return []User(f);
+
+func (f AssigneeField) JSONValue() interface{} {
+	return []User(f)
 }
+
 func (f AssigneeField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_ASSIGNEE,
@@ -371,9 +412,11 @@ func (f AssigneeField) MarshalJSON() ([]byte, error) {
 
 // RecordNumberField is a record number.
 type RecordNumberField string
-func (f RecordNumberField) JSONValue() (interface{}) {
-	return string(f);
+
+func (f RecordNumberField) JSONValue() interface{} {
+	return string(f)
 }
+
 func (f RecordNumberField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_RECNUM,
@@ -383,9 +426,11 @@ func (f RecordNumberField) MarshalJSON() ([]byte, error) {
 
 // CreatorField is a user who created a record.
 type CreatorField User
-func (f CreatorField) JSONValue() (interface{}) {
-	return User(f);
+
+func (f CreatorField) JSONValue() interface{} {
+	return User(f)
 }
+
 func (f CreatorField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_CREATOR,
@@ -395,9 +440,11 @@ func (f CreatorField) MarshalJSON() ([]byte, error) {
 
 // CreationTimeField is the time when a record is created.
 type CreationTimeField time.Time
-func (t CreationTimeField) JSONValue() (interface{}) {
-	return time.Time(t).Format(time.RFC3339);
+
+func (t CreationTimeField) JSONValue() interface{} {
+	return time.Time(t).Format(time.RFC3339)
 }
+
 func (t CreationTimeField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_CTIME,
@@ -407,9 +454,11 @@ func (t CreationTimeField) MarshalJSON() ([]byte, error) {
 
 // ModifierField is a user who modified a record last.
 type ModifierField User
-func (f ModifierField) JSONValue() (interface{}) {
-		return User(f);
+
+func (f ModifierField) JSONValue() interface{} {
+	return User(f)
 }
+
 func (f ModifierField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_MODIFIER,
@@ -419,9 +468,11 @@ func (f ModifierField) MarshalJSON() ([]byte, error) {
 
 // ModificationTimeField is the time when a record is last modified.
 type ModificationTimeField time.Time
-func (t ModificationTimeField) JSONValue() (interface{}) {
-		return time.Time(t).Format(time.RFC3339);
+
+func (t ModificationTimeField) JSONValue() interface{} {
+	return time.Time(t).Format(time.RFC3339)
 }
+
 func (t ModificationTimeField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_MTIME,
@@ -437,24 +488,26 @@ type SubTableEntry struct {
 
 // SubTableField is a list of subtable entries.
 type SubTableField []*Record
-func (f SubTableField) JSONValue() (interface{}) {
+
+func (f SubTableField) JSONValue() interface{} {
 	type sub_record struct {
 		Record *Record `json:"value"`
 	}
 	type sub_record_with_id struct {
-		Id    uint64   `json:"id,string"`
+		Id     uint64  `json:"id,string"`
 		Record *Record `json:"value"`
 	}
 	recs := make([]interface{}, 0, len(f))
 	for _, rec := range f {
-		if (rec.id == 0) {
+		if rec.id == 0 {
 			recs = append(recs, sub_record{rec})
 		} else {
 			recs = append(recs, sub_record_with_id{rec.id, rec})
 		}
 	}
-	return recs;
+	return recs
 }
+
 func (f SubTableField) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
 		"type":  FT_SUBTABLE,

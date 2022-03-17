@@ -46,6 +46,10 @@ type AppError struct {
 	Errors         string `json:"errors"`  // Error Description.
 }
 
+type AppFormFields struct {
+	Properties interface{} `json:"properties"`
+}
+
 func (e *AppError) Error() string {
 	if len(e.Message) == 0 {
 		return "HTTP error: " + e.HttpStatus
@@ -57,6 +61,7 @@ func (e *AppError) Error() string {
 type UpdateKeyField interface {
 	JSONValue() interface{}
 }
+
 type UpdateKey struct {
 	FieldCode string
 	Field     UpdateKeyField
@@ -89,7 +94,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 //
 //	func handler(w http.ResponseWriter, r *http.Request) {
 //		c := appengine.NewContext(r)
-//		app := &kintone.App{urlfetch.Client(c)}
+//		app := &kintone.App{Client: urlfetch.Client(c)}
 //		...
 //	}
 //
@@ -104,7 +109,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 //	func main() {
 //		proxyURL, _ := url.Parse("https://proxy.example.com")
 //		transport := &http.Transport{Proxy: http.ProxyURL(proxyURL)}
-//		client := &http.Client(Transport: transport)
+//		client := &http.Client{Transport: transport}
 //		app := &kintone.App{Client: client}
 //		...
 //	}
@@ -181,6 +186,7 @@ func (app *App) createUrl(api string, query string) url.URL {
 	}
 	return resultUrl
 }
+
 func (app *App) setAuth(request *http.Request) {
 	if app.basicAuth {
 		request.SetBasicAuth(app.basicAuthUser, app.basicAuthPassword)
@@ -196,7 +202,7 @@ func (app *App) setAuth(request *http.Request) {
 	}
 }
 
-//NewRequest create a request connect to kintone api.
+// NewRequest create a request connect to kintone api.
 func (app *App) NewRequest(method, url string, body io.Reader) (*http.Request, error) {
 	bodyData := io.Reader(nil)
 	if body != nil {
@@ -321,18 +327,18 @@ func parseResponse(resp *http.Response) ([]byte, error) {
 			}
 		}
 
-		//Get other than the Errors property
+		// Get other than the Errors property
 		var ae AppError
 		json.Unmarshal(body, &ae)
 		ae.HttpStatus = resp.Status
 		ae.HttpStatusCode = resp.StatusCode
 
-		//Get the Errors property
+		// Get the Errors property
 		var errors interface{}
 		json.Unmarshal(body, &errors)
 		msg := errors.(map[string]interface{})
 		v, ok := msg["errors"]
-		//If the Errors property exists
+		// If the Errors property exists
 		if ok {
 			result, err := json.Marshal(v)
 			if err != nil {
@@ -460,7 +466,7 @@ func isAllowedLang(allowedLangs []string, lang string) bool {
 func (app *App) GetProcess(lang string) (process *Process, err error) {
 	type request_body struct {
 		App  uint64 `json:"app,string"`
-		lang string `json:"lang,string"`
+		Lang string `json:"lang,string"`
 	}
 	if app.User == "" || app.Password == "" {
 		err = errors.New("This API only supports password authentication")
@@ -552,7 +558,7 @@ func escapeQuotes(s string) string {
 //
 // If successfully uploaded, the key string of the uploaded file is returned.
 func (app *App) Upload(fileName, contentType string, data io.Reader) (key string, err error) {
-	f, err := ioutil.TempFile("", "hoge")
+	f, err := ioutil.TempFile("", "go-kintone-")
 	if err != nil {
 		return
 	}
@@ -1015,8 +1021,78 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		t.MaxValue, t.MinValue, t.MaxLength, t.MinLength,
 		t.Default, t.DefaultTime, t.Options, t.Expression,
 		(t.Separator == "true"),
-		t.Medium, t.Format, t.Fields}
+		t.Medium, t.Format, t.Fields,
+	}
 	return nil
+}
+
+// Decode JSON from app/form/fields.json
+func decodeFieldInfo(t AppFormFields, ret map[string]*FieldInfo) {
+	itemsMap :=  t.Properties.(map[string]interface{})
+	for k, v := range itemsMap {
+		fi := FieldInfo{}
+		for l, w := range v.(map[string]interface{}) {
+			switch l {
+			case "label":
+				fi.Label = w.(string)
+			case "code":
+				fi.Code = w.(string)
+			case "type":
+				fi.Type = w.(string)
+			case "noLabel":
+				fi.NoLabel = w.(bool)
+			case "required":
+				fi.Required = w.(bool)
+			case "unique":
+				fi.Unique = w.(bool)
+			case "maxValue":
+				fi.MaxValue = w
+			case "minValue":
+				fi.MaxValue = w
+			case "maxLength":
+				fi.MaxLength = w
+			case "minLength":
+				fi.MinLength = w
+			case "defaultValue":
+				fi.Default = w
+			case "defaultNowValue":
+				fi.DefaultTime = w
+			case "options":
+				var sa []string
+				for _, x := range w.(map[string]interface{}) {
+					sa = append(sa, x.(map[string]interface{})["label"].(string))
+				}
+				fi.Options = sa
+			case "expression":
+				fi.Expression = w.(string)
+			case "digit":
+				fi.Separator = w.(bool)
+			case "protocol":
+				fi.Medium = w.(string)
+			case "format":
+				fi.Format = w.(string)
+			case "fields":
+				ret := make(map[string]*FieldInfo)
+				var y AppFormFields
+				y.Properties = w
+			  decodeFieldInfo(y, ret)
+        var sb []FieldInfo
+				for z, _ := range ret {
+        	sb = append(sb, *ret[z])
+        }
+        fi.Fields = sb
+			default: break;
+			}
+		}
+		switch fi.Type {
+		case "GROUP":
+			// Do not add to []FieldInfo
+		case "REFERENCE_TABLE":
+			// Do not add to []FieldInfo
+		default:
+			ret[k] = &fi
+		}
+	}
 }
 
 // Fields returns the meta data of the fields in this application.
@@ -1027,7 +1103,7 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		App uint64 `json:"app,string"`
 	}
 	data, _ := json.Marshal(request_body{app.AppId})
-	req, err := app.newRequest("GET", "form", bytes.NewReader(data))
+	req, err := app.newRequest("GET", "app/form/fields", bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
@@ -1040,23 +1116,18 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 		return nil, err
 	}
 
-	var t struct {
-		Properties []FieldInfo `json:"properties"`
-	}
+	var t AppFormFields
 	err = json.Unmarshal(body, &t)
 	if err != nil {
 		return nil, ErrInvalidResponse
 	}
 
 	ret := make(map[string]*FieldInfo)
-	for i, _ := range t.Properties {
-		fi := &(t.Properties[i])
-		ret[fi.Code] = fi
-	}
+	decodeFieldInfo(t, ret)
 	return ret, nil
 }
 
-//CreateCursor return the meta data of the Cursor in this application
+// CreateCursor return the meta data of the Cursor in this application
 func (app *App) CreateCursor(fields []string, query string, size uint64) (*Cursor, error) {
 	type cursor struct {
 		App    uint64   `json:"app"`
@@ -1080,6 +1151,9 @@ func (app *App) CreateCursor(fields []string, query string, size uint64) (*Curso
 		return nil, err
 	}
 	result, err := decodeCursor(body)
+	if err != nil {
+		return nil, err
+	}
 	return result, nil
 }
 
@@ -1112,8 +1186,8 @@ func (app *App) DeleteCursor(id string) error {
 	return nil
 }
 
-//Using Cursor Id to get all records
-//GetRecordsByCursor return the meta data of the Record in this application
+// Using Cursor Id to get all records
+// GetRecordsByCursor return the meta data of the Record in this application
 func (app *App) GetRecordsByCursor(id string) (*GetRecordsCursorResponse, error) {
 	url := app.createUrl("records/cursor", "id="+id)
 	request, err := app.NewRequest("GET", url.String(), nil)
