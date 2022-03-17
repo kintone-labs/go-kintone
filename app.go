@@ -84,7 +84,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 //	import (
 //		"appengine"
 //		"appengine/urlfetch"
-//		"github.com/kintone/go-kintone"
+//		"github.com/kintone-labs/go-kintone"
 //		"net/http"
 //	)
 //
@@ -99,7 +99,7 @@ func (f UpdateKey) MarshalJSON() ([]byte, error) {
 //	import (
 //		"net/http"
 //		"net/url"
-//		"github.com/kintone/go-kintone"
+//		"github.com/kintone-labs/go-kintone"
 //	)
 //
 //	func main() {
