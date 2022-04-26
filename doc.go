@@ -6,7 +6,7 @@ See https://developer.kintone.io for API specs.
 	import (
 		"log"
 
-		"github.com/kintone/go-kintone"
+		"github.com/kintone-labs/go-kintone"
 	)
 	...
 	app := &kintone.App{
