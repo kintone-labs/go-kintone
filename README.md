@@ -29,15 +29,15 @@ This software is licensed under [the BSD 2-clause license][bsd2].
 
 To import this package:
 
-    import "github.com/kintone/go-kintone"
+    import "github.com/kintone-labs/go-kintone"
 
-Visit the docs on [godoc.org][godoc].
+Visit the docs on [pkg.go.dev][pkggodev].
 
 [kintone]: https://www.kintone.com/
 [APIen]: https://developer.kintone.io/hc/en-us
 [APIja]: https://developer.cybozu.io/hc/ja
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
-[godoc]: http://godoc.org/github.com/kintone/go-kintone
+[pkggodev]: https://pkg.go.dev/github.com/kintone-labs/go-kintone
 
 ## Copyright
 
