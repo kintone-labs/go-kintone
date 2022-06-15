@@ -34,7 +34,7 @@ To import this package:
 Visit the docs on [pkg.go.dev][pkggodev].
 
 [kintone]: https://www.kintone.com/
-[APIen]: https://developer.kintone.io/hc/en-us
+[APIen]: https://kintone.dev/en/
 [APIja]: https://developer.cybozu.io/hc/ja
 [bsd2]: http://opensource.org/licenses/BSD-2-Clause
 [pkggodev]: https://pkg.go.dev/github.com/kintone-labs/go-kintone
