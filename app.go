@@ -985,6 +985,7 @@ type FieldInfo struct {
 	Medium      string      `json:"protocol"`          // "WEB", "CALL", or "MAIL"
 	Format      string      `json:"format"`            // "NUMBER", "NUMBER_DIGIT", "DATETIME", "DATE", "TIME", "HOUR_MINUTE", "DAY_HOUR_MINUTE"
 	Fields      []FieldInfo `json:"fields"`            // Field list of this subtable
+	Index       int 		`json:"index"`   
 }
 
 // Work around code to handle "true"/"false" strings as booleans...
@@ -1008,6 +1009,8 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		Medium      string      `json:"protocol"`
 		Format      string      `json:"format"`
 		Fields      []FieldInfo `json:"fields"`
+		Index       int 		`json:"index"`   
+
 	}
 	err := json.Unmarshal(data, &t)
 	if err != nil {
@@ -1021,7 +1024,7 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		t.MaxValue, t.MinValue, t.MaxLength, t.MinLength,
 		t.Default, t.DefaultTime, t.Options, t.Expression,
 		(t.Separator == "true"),
-		t.Medium, t.Format, t.Fields,
+		t.Medium, t.Format, t.Fields,t.Index,
 	}
 	return nil
 }
@@ -1105,13 +1108,18 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	data, _ := json.Marshal(request_body{app.AppId})
 	req, err := app.newRequest("GET", "app/form/fields", bytes.NewReader(data))
 	if err != nil {
-		return nil, err
+		return nil, err 
 	}
-	resp, err := app.do(req)
+	resp, err := app.do(req) 
 	if err != nil {
 		return nil, err
 	}
 	body, err := parseResponse(resp)
+	fieldCodes := getFieldCodeFromFormField(body)
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	
 	if err != nil {
 		return nil, err
 	}
@@ -1124,7 +1132,70 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 
 	ret := make(map[string]*FieldInfo)
 	decodeFieldInfo(t, ret)
+	updateIndexToField(fieldCodes, ret)
 	return ret, nil
+}
+
+func getFieldCodeFromFormField(formField []byte) []string {
+	result := []string{}
+	var tempByteString= "";
+	var fieldCode = "";
+	fieldCodeIgnore := []string{"GROUP"}
+	for _,byteField:= range formField {
+		hasField := hasFieldCodeIgnore(byteField , tempByteString, fieldCodeIgnore)
+		if strings.Contains(tempByteString, `"code":`) {
+			if string(byteField) == "," {
+				if hasField {
+					tempByteString = "";
+					fieldCode = "";
+					hasField= false;
+					continue;
+				}
+				tempByteString = "";
+				result = append(result, fieldCode);
+				fieldCode = "";
+			} else if string(byteField) != `"` {
+				fieldCode += string(byteField);
+			}
+			continue;
+		}
+		tempByteString += string(byteField);
+	}
+	return result;
+}
+
+func hasFieldCodeIgnore(byteField byte,tempFormFieldString string,fieldCodeIgnore []string) bool {
+	hasField := false
+	if strings.Contains(tempFormFieldString, `"type":`) {
+		if string(byteField) == "," {
+			for _, type_1 := range fieldCodeIgnore {
+				if strings.Contains(tempFormFieldString, type_1)  {
+					hasField= true
+				}
+			}
+		}
+	}
+	return hasField
+}
+
+func updateIndexToField(fieldCode []string, fieldInfo map[string]*FieldInfo) {
+	i:=0
+	for _,initFieldCode:= range fieldCode {
+		for _,sortedFieldCode:= range fieldInfo {
+			if initFieldCode == sortedFieldCode.Code {
+				sortedFieldCode.Index = i;
+				i+=1
+			}
+
+			for k,subField := range sortedFieldCode.Fields {
+				if initFieldCode == subField.Code {
+					sortedFieldCode.Fields[k].Index = i;
+					i+=1
+				}
+
+			}
+		}
+	}
 }
 
 // CreateCursor return the meta data of the Cursor in this application
