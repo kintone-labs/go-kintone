@@ -11,10 +11,6 @@ to access [kintone][] with its official REST API ([en][APIen], [ja][APIja]).
 
 [kintone][] is our B2B cloud service; you can create great web apps instantly with kintone!
 
-## Version
-
-0.3.0
-
 ## License
 
 This software is licensed under [the BSD 2-clause license][bsd2].
