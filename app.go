@@ -985,7 +985,7 @@ type FieldInfo struct {
 	Medium      string      `json:"protocol"`          // "WEB", "CALL", or "MAIL"
 	Format      string      `json:"format"`            // "NUMBER", "NUMBER_DIGIT", "DATETIME", "DATE", "TIME", "HOUR_MINUTE", "DAY_HOUR_MINUTE"
 	Fields      []FieldInfo `json:"fields"`            // Field list of this subtable
-	Index       int 		`json:"index"`   
+	Index       int         `json:"index"`
 }
 
 // Work around code to handle "true"/"false" strings as booleans...
@@ -1009,8 +1009,7 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		Medium      string      `json:"protocol"`
 		Format      string      `json:"format"`
 		Fields      []FieldInfo `json:"fields"`
-		Index       int 		`json:"index"`   
-
+		Index       int         `json:"index"`
 	}
 	err := json.Unmarshal(data, &t)
 	if err != nil {
@@ -1024,14 +1023,14 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		t.MaxValue, t.MinValue, t.MaxLength, t.MinLength,
 		t.Default, t.DefaultTime, t.Options, t.Expression,
 		(t.Separator == "true"),
-		t.Medium, t.Format, t.Fields,t.Index,
+		t.Medium, t.Format, t.Fields, t.Index,
 	}
 	return nil
 }
 
 // Decode JSON from app/form/fields.json
 func decodeFieldInfo(t AppFormFields, ret map[string]*FieldInfo) {
-	itemsMap :=  t.Properties.(map[string]interface{})
+	itemsMap := t.Properties.(map[string]interface{})
 	for k, v := range itemsMap {
 		fi := FieldInfo{}
 		for l, w := range v.(map[string]interface{}) {
@@ -1078,13 +1077,14 @@ func decodeFieldInfo(t AppFormFields, ret map[string]*FieldInfo) {
 				ret := make(map[string]*FieldInfo)
 				var y AppFormFields
 				y.Properties = w
-			  decodeFieldInfo(y, ret)
-        var sb []FieldInfo
+				decodeFieldInfo(y, ret)
+				var sb []FieldInfo
 				for z, _ := range ret {
-        	sb = append(sb, *ret[z])
-        }
-        fi.Fields = sb
-			default: break;
+					sb = append(sb, *ret[z])
+				}
+				fi.Fields = sb
+			default:
+				break
 			}
 		}
 		switch fi.Type {
@@ -1108,9 +1108,9 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	data, _ := json.Marshal(request_body{app.AppId})
 	req, err := app.newRequest("GET", "app/form/fields", bytes.NewReader(data))
 	if err != nil {
-		return nil, err 
+		return nil, err
 	}
-	resp, err := app.do(req) 
+	resp, err := app.do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -1119,7 +1119,7 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -1136,41 +1136,41 @@ func (app *App) Fields() (map[string]*FieldInfo, error) {
 	return ret, nil
 }
 
-func getFieldCodeFromFormField(formField []byte) []string {
-	result := []string{}
-	var tempByteString= "";
-	var fieldCode = "";
+func getFieldCodeFromFormField(formField []byte) [][]byte {
+	result := [][]byte{}
+	var tempByteString = ""
+	fieldCode := []byte{}
 	fieldCodeIgnore := []string{"GROUP"}
-	for _,byteField:= range formField {
-		hasField := hasFieldCodeIgnore(byteField , tempByteString, fieldCodeIgnore)
+	for _, byteField := range formField {
+		hasField := hasFieldCodeIgnore(byteField, tempByteString, fieldCodeIgnore)
 		if strings.Contains(tempByteString, `"code":`) {
 			if string(byteField) == "," {
 				if hasField {
-					tempByteString = "";
-					fieldCode = "";
-					hasField= false;
-					continue;
+					tempByteString = ""
+					fieldCode = []byte{}
+					hasField = false
+					continue
 				}
-				tempByteString = "";
-				result = append(result, fieldCode);
-				fieldCode = "";
+				tempByteString = ""
+				result = append(result, fieldCode)
+				fieldCode = []byte{}
 			} else if string(byteField) != `"` {
-				fieldCode += string(byteField);
+				fieldCode = append(fieldCode, byteField)
 			}
-			continue;
+			continue
 		}
-		tempByteString += string(byteField);
+		tempByteString += string(byteField)
 	}
-	return result;
+	return result
 }
 
-func hasFieldCodeIgnore(byteField byte,tempFormFieldString string,fieldCodeIgnore []string) bool {
+func hasFieldCodeIgnore(byteField byte, tempFormFieldString string, fieldCodeIgnore []string) bool {
 	hasField := false
 	if strings.Contains(tempFormFieldString, `"type":`) {
 		if string(byteField) == "," {
 			for _, type_1 := range fieldCodeIgnore {
-				if strings.Contains(tempFormFieldString, type_1)  {
-					hasField= true
+				if strings.Contains(tempFormFieldString, fmt.Sprintf(`"type": %s"`, type_1)) {
+					hasField = true
 				}
 			}
 		}
@@ -1178,19 +1178,19 @@ func hasFieldCodeIgnore(byteField byte,tempFormFieldString string,fieldCodeIgnor
 	return hasField
 }
 
-func updateIndexToField(fieldCode []string, fieldInfo map[string]*FieldInfo) {
-	i:=0
-	for _,initFieldCode:= range fieldCode {
-		for _,sortedFieldCode:= range fieldInfo {
-			if initFieldCode == sortedFieldCode.Code {
-				sortedFieldCode.Index = i;
-				i+=1
+func updateIndexToField(fieldCode [][]byte, fieldInfo map[string]*FieldInfo) {
+	i := 0
+	for _, initFieldCode := range fieldCode {
+		for _, sortedFieldCode := range fieldInfo {
+			if bytes.Equal(initFieldCode, []byte(sortedFieldCode.Code)) {
+				sortedFieldCode.Index = i
+				i += 1
 			}
 
-			for k,subField := range sortedFieldCode.Fields {
-				if initFieldCode == subField.Code {
-					sortedFieldCode.Fields[k].Index = i;
-					i+=1
+			for k, subField := range sortedFieldCode.Fields {
+				if bytes.Equal(initFieldCode, []byte(subField.Code)) {
+					sortedFieldCode.Fields[k].Index = i
+					i += 1
 				}
 
 			}
