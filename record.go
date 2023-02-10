@@ -342,6 +342,28 @@ func DecodeRecords(b []byte) ([]*Record, error) {
 	return rec_list, nil
 }
 
+func DecodeRecordsWithTotalCount(b []byte) ([]*Record, string, error) {
+	var t struct {
+		Records    []recordData `json:"records"`
+		TotalCount string       `json:"totalCount"`
+	}
+	err := json.Unmarshal(b, &t)
+	if err != nil {
+		return nil, "", errors.New("Invalid JSON format")
+	}
+
+	rec_list := make([]*Record, len(t.Records))
+	for i, rd := range t.Records {
+		r, err := decodeRecordData(rd)
+		if err != nil {
+			return nil, "", err
+		}
+		rec_list[i] = r
+	}
+
+	return rec_list, t.TotalCount, nil
+}
+
 // DecodeRecord decodes JSON response for single-get API.
 func DecodeRecord(b []byte) (*Record, error) {
 	var t struct {
