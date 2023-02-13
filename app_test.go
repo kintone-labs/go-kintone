@@ -327,7 +327,6 @@ func TestGetRecord(t *testing.T) {
 	}
 }
 
-// test
 func TestGetRecordWithTotalCount(t *testing.T) {
 	testDataRecords := GetTestDataGetRecordsWithTotalCount()
 	app := newApp()
@@ -343,8 +342,6 @@ func TestGetRecordWithTotalCount(t *testing.T) {
 		}
 	}
 }
-
-// end test
 
 func TestUpdateRecord(t *testing.T) {
 	testData := GetTestDataGetRecord()
