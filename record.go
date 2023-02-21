@@ -322,24 +322,25 @@ func decodeRecordData(data recordData) (*Record, error) {
 }
 
 // DecodeRecords decodes JSON response for multi-get API.
-func DecodeRecords(b []byte) ([]*Record, error) {
+func DecodeRecords(b []byte) ([]*Record, string, error) {
 	var t struct {
-		Records []recordData `json:"records"`
+		Records    []recordData `json:"records"`
+		TotalCount string       `json:"total_count"`
 	}
 	err := json.Unmarshal(b, &t)
 	if err != nil {
-		return nil, errors.New("Invalid JSON format")
+		return nil, "", errors.New("Invalid JSON format")
 	}
 
 	rec_list := make([]*Record, len(t.Records))
 	for i, rd := range t.Records {
 		r, err := decodeRecordData(rd)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		rec_list[i] = r
 	}
-	return rec_list, nil
+	return rec_list, t.TotalCount, nil
 }
 
 // DecodeRecord decodes JSON response for single-get API.

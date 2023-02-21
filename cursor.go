@@ -32,7 +32,7 @@ func DecodeGetRecordsCursorResponse(b []byte) (rc *GetRecordsCursorResponse, err
 	if err != nil {
 		return nil, err
 	}
-	listRecord, err := DecodeRecords(b)
+	listRecord, _, err := DecodeRecords(b)
 	if err != nil {
 		return nil, err
 	}

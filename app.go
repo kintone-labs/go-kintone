@@ -377,6 +377,33 @@ func (app *App) GetRecord(id uint64) (*Record, error) {
 	return rec, nil
 }
 
+func (app *App) getRecords(fields []string, query string, totalCount bool) ([]*Record, string, error) {
+	type request_body struct {
+		App        uint64   `json:"app,string"`
+		Fields     []string `json:"fields"`
+		Query      string   `json:"query"`
+		TotalCount bool     `json:"totalCount"`
+	}
+	data, _ := json.Marshal(request_body{app.AppId, fields, query, totalCount})
+	req, err := app.newRequest("GET", "records", bytes.NewReader(data))
+	if err != nil {
+		return nil, "", err
+	}
+	resp, err := app.do(req)
+	if err != nil {
+		return nil, "", err
+	}
+	body, err := parseResponse(resp)
+	if err != nil {
+		return nil, "", err
+	}
+	recs, respTotalCount, err := DecodeRecords(body)
+	if err != nil {
+		return nil, "", ErrInvalidResponse
+	}
+	return recs, respTotalCount, nil
+}
+
 // GetRecords fetches records matching given conditions.
 //
 // This method can retrieve up to 100 records at once.
@@ -387,29 +414,13 @@ func (app *App) GetRecord(id uint64) (*Record, error) {
 // If fields is nil, all fields are retrieved.
 // See API specs how to construct query strings.
 func (app *App) GetRecords(fields []string, query string) ([]*Record, error) {
-	type request_body struct {
-		App    uint64   `json:"app,string"`
-		Fields []string `json:"fields"`
-		Query  string   `json:"query"`
-	}
-	data, _ := json.Marshal(request_body{app.AppId, fields, query})
-	req, err := app.newRequest("GET", "records", bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	resp, err := app.do(req)
-	if err != nil {
-		return nil, err
-	}
-	body, err := parseResponse(resp)
-	if err != nil {
-		return nil, err
-	}
-	recs, err := DecodeRecords(body)
-	if err != nil {
-		return nil, ErrInvalidResponse
-	}
-	return recs, nil
+	records, _, err := app.getRecords(fields, query, false)
+	return records, err
+}
+
+// GetRecordsWithTotalCount fetches records matching given conditions and returns totalCount of query result.
+func (app *App) GetRecordsWithTotalCount(fields []string, query string) ([]*Record, string, error) {
+	return app.getRecords(fields, query, true)
 }
 
 // GetAllRecords fetches all records.
@@ -440,7 +451,7 @@ func (app *App) GetAllRecords(fields []string) ([]*Record, error) {
 		if err != nil {
 			return nil, err
 		}
-		r, err := DecodeRecords(body)
+		r, _, err := DecodeRecords(body)
 		if err != nil {
 			return nil, ErrInvalidResponse
 		}
