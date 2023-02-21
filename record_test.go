@@ -389,3 +389,76 @@ func TestDecodeRecords(t *testing.T) {
 		t.Error("dropdown must be invalid")
 	}
 }
+
+func TestDecodeRecordsWithTotalCount(t *testing.T) {
+	b := []byte(`
+	{
+		"records": [
+			{
+				"record_id": {
+					"type": "RECORD_NUMBER",
+					"value": "1"
+				},
+				"created_time": {
+					"type": "CREATED_TIME",
+					"value": "2012-02-03T08:50:00Z"
+				},
+				"updated_time": {
+					"type": "UPDATED_TIME",
+					"value": "2018-10-24T08:50:00Z"
+				},
+				"dropdown": {
+					"type": "DROP_DOWN",
+					"value": null
+				}
+			},
+			{
+				"record_id": {
+					"type": "RECORD_NUMBER",
+					"value": "2"
+				},
+				"created_time": {
+					"type": "CREATED_TIME",
+					"value": "2012-02-03T09:22:00Z"
+				},
+				"updated_time": {
+					"type": "UPDATED_TIME",
+					"value": "2018-10-24T09:22:00Z"
+				},
+				"dropdown": {
+					"type": "DROP_DOWN",
+					"value": null
+				}
+			}
+		],
+		"totalCount": "9999"
+	}`)
+
+	type Record struct {
+		id       uint64
+		revision int64
+		Fields   map[string]interface{}
+	}
+
+	rec, totalCount, err := DecodeRecordsWithTotalCount(b)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+	if totalCount != "9999" {
+		t.Error("totalCount is incorrect")
+	}
+	if len(rec) != 2 {
+		t.Error("length mismatch")
+	}
+	if _, ok := rec[0].Fields["record_id"]; !ok {
+		t.Error("record_id must exist")
+	}
+	dropdown, ok := rec[0].Fields["dropdown"]
+	if !ok {
+		t.Error("null dropdown field must exist")
+	}
+	if dropdown.(SingleSelectField).Valid {
+		t.Error("dropdown must be invalid")
+	}
+}

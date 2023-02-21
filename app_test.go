@@ -7,6 +7,7 @@ package kintone
 import (
 	"crypto/tls"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -168,8 +169,30 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 	checkAuth(response, request)
 	checkContentType(response, request)
 	if request.Method == "GET" {
-		testData := GetTestDataGetRecords()
-		fmt.Fprint(response, testData.output)
+		type RequestBody struct {
+			App        uint64   `json:"app,string"`
+			Fields     []string `json:"fields"`
+			Query      string   `json:"query"`
+			TotalCount bool     `json:"totalCount"`
+		}
+
+		body, err := ioutil.ReadAll(request.Body)
+		if err != nil {
+			http.Error(response, "Bad request", http.StatusBadRequest)
+			return
+		}
+		var bodyRequest RequestBody
+		if err := json.Unmarshal([]byte(body), &bodyRequest); err != nil {
+			http.Error(response, "Body incorrect", http.StatusBadRequest)
+		}
+
+		if bodyRequest.TotalCount {
+			testData := GetTestDataGetRecordsWithTotalCount()
+			fmt.Fprint(response, testData.output)
+		} else {
+			testData := GetTestDataGetRecords()
+			fmt.Fprint(response, testData.output)
+		}
 	} else if request.Method == "DELETE" {
 		testData := GetTestDataDeleteRecords()
 		fmt.Fprint(response, testData.output)
@@ -178,6 +201,8 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 		fmt.Fprint(response, testData.output)
 	}
 }
+
+//end
 
 func handleResponseGetRecordsComments(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
@@ -299,6 +324,22 @@ func TestGetRecord(t *testing.T) {
 		t.Error(err)
 	} else {
 		t.Log(len(recs))
+	}
+}
+
+func TestGetRecordWithTotalCount(t *testing.T) {
+	testDataRecords := GetTestDataGetRecordsWithTotalCount()
+	app := newApp()
+
+	if recs, totalCount, err := app.GetRecordsWithTotalCount(testDataRecords.input[0].([]string), testDataRecords.input[1].(string)); err != nil {
+		t.Error(err)
+	} else {
+		if len(recs) > 3 {
+			t.Error("Too many records")
+		}
+		if totalCount != "999" {
+			t.Error("TotalCount incorrect", err)
+		}
 	}
 }
 

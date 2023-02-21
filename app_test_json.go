@@ -161,6 +161,55 @@ func GetTestDataGetRecords() *TestData {
 	}
 }
 
+func GetTestDataGetRecordsWithTotalCount() *TestData {
+	return &TestData{
+		input: []interface{}{
+			[]string{},
+			"limit 3 offset 3",
+		},
+		output: `
+		{
+			"records":[
+				{
+					"Created_datetime":{
+						"type":"CREATED_TIME",
+						"value":"2019-03-11T04:50:00Z"
+					},
+					"Created_by":{
+						"type":"CREATOR",
+						"value":{
+							"code":"Administrator",
+							"name":"Administrator"
+						}
+					},
+					"$id":{
+						"type":"__ID__",
+						"value":"1"
+					}
+				},
+				{
+					"Created_datetime":{
+						"type":"CREATED_TIME",
+						"value":"2019-03-11T06:42:00Z"
+					},
+					"Created_by":{
+						"type":"CREATOR",
+						"value":{
+							"code":"Administrator",
+							"name":"Administrator"
+						}
+					},
+					"$id":{
+						"type":"__ID__",
+						"value":"2"
+					}
+				}
+			],
+			"totalCount": "999"
+		}`,
+	}
+}
+
 func GetDataTestUploadFile() *TestData {
 	return &TestData{
 		output: `

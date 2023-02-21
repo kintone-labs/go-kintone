@@ -316,6 +316,7 @@ func isJSON(contentType string) bool {
 func parseResponse(resp *http.Response) ([]byte, error) {
 	body, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
+
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +385,9 @@ func (app *App) getRecords(fields []string, query string, totalCount bool) ([]*R
 		Query      string   `json:"query"`
 		TotalCount bool     `json:"totalCount"`
 	}
+
 	data, _ := json.Marshal(request_body{app.AppId, fields, query, totalCount})
+
 	req, err := app.newRequest("GET", "records", bytes.NewReader(data))
 	if err != nil {
 		return nil, "", err
@@ -397,7 +400,8 @@ func (app *App) getRecords(fields []string, query string, totalCount bool) ([]*R
 	if err != nil {
 		return nil, "", err
 	}
-	recs, respTotalCount, err := DecodeRecords(body)
+	recs, respTotalCount, err := DecodeRecordsWithTotalCount(body)
+
 	if err != nil {
 		return nil, "", ErrInvalidResponse
 	}
