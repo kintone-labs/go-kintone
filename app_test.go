@@ -202,8 +202,6 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 	}
 }
 
-//end
-
 func handleResponseGetRecordsComments(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
 	checkContentType(response, request)

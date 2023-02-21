@@ -371,7 +371,7 @@ func TestDecodeRecords(t *testing.T) {
         }
     ]
 }`)
-	rec, _, err := DecodeRecords(j)
+	rec, err := DecodeRecords(j)
 	if err != nil {
 		t.Fatal(err)
 	}
