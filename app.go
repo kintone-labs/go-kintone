@@ -455,7 +455,7 @@ func (app *App) GetAllRecords(fields []string) ([]*Record, error) {
 		if err != nil {
 			return nil, err
 		}
-		r, err := DecodeRecords(body)
+		r, _, err := DecodeRecords(body)
 		if err != nil {
 			return nil, ErrInvalidResponse
 		}
