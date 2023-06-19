@@ -982,49 +982,51 @@ func (app *App) DeleteComment(recordId uint64, commentId uint64) error {
 
 // FieldInfo is the meta data structure of a field.
 type FieldInfo struct {
-	Label       string      `json:"label"`             // Label string
-	Code        string      `json:"code"`              // Unique field code
-	Type        string      `json:"type"`              // Field type.  One of FT_* constant.
-	NoLabel     bool        `json:"noLabel"`           // true to hide the label
-	Required    bool        `json:"required"`          // true if this field must be filled
-	Unique      bool        `json:"unique"`            // true if field values must be unique
-	MaxValue    interface{} `json:"maxValue"`          // nil or numeric string
-	MinValue    interface{} `json:"minValue"`          // nil or numeric string
-	MaxLength   interface{} `json:"maxLength"`         // nil or numeric string
-	MinLength   interface{} `json:"minLength"`         // nil or numeric string
-	Default     interface{} `json:"defaultValue"`      // anything
-	DefaultTime interface{} `json:"defaultExpression"` // nil or "NOW"
-	Options     []string    `json:"options"`           // list of selectable values
-	Expression  string      `json:"expression"`        // to calculate values
-	Separator   bool        `json:"digit"`             // true to use thousand separator
-	Medium      string      `json:"protocol"`          // "WEB", "CALL", or "MAIL"
-	Format      string      `json:"format"`            // "NUMBER", "NUMBER_DIGIT", "DATETIME", "DATE", "TIME", "HOUR_MINUTE", "DAY_HOUR_MINUTE"
-	Fields      []FieldInfo `json:"fields"`            // Field list of this subtable
-	Index       int         `json:"index"`
+	Label       string                  `json:"label"`             // Label string
+	Code        string                  `json:"code"`              // Unique field code
+	Type        string                  `json:"type"`              // Field type.  One of FT_* constant.
+	NoLabel     bool                    `json:"noLabel"`           // true to hide the label
+	Required    bool                    `json:"required"`          // true if this field must be filled
+	Unique      bool                    `json:"unique"`            // true if field values must be unique
+	MaxValue    interface{}             `json:"maxValue"`          // nil or numeric string
+	MinValue    interface{}             `json:"minValue"`          // nil or numeric string
+	MaxLength   interface{}             `json:"maxLength"`         // nil or numeric string
+	MinLength   interface{}             `json:"minLength"`         // nil or numeric string
+	Default     interface{}             `json:"defaultValue"`      // anything
+	DefaultTime interface{}             `json:"defaultExpression"` // nil or "NOW"
+	Options     []string                `json:"options"`           // list of selectable values
+	Expression  string                  `json:"expression"`        // to calculate values
+	Separator   bool                    `json:"digit"`             // true to use thousand separator
+	Medium      string                  `json:"protocol"`          // "WEB", "CALL", or "MAIL"
+	Format      string                  `json:"format"`            // "NUMBER", "NUMBER_DIGIT", "DATETIME", "DATE", "TIME", "HOUR_MINUTE", "DAY_HOUR_MINUTE"
+	Fields      []FieldInfo             `json:"fields"`            // Field list of this subtable
+	Index       int                     `json:"index"`
+	Lookup      *map[string]interface{} `json:"lookup,omitempty"` // lookup
 }
 
 // Work around code to handle "true"/"false" strings as booleans...
 func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 	var t struct {
-		Label       string      `json:"label"`
-		Code        string      `json:"code"`
-		Type        string      `json:"type"`
-		NoLabel     string      `json:"noLabel"`
-		Required    string      `json:"required"`
-		Unique      string      `json:"unique"`
-		MaxValue    interface{} `json:"maxValue"`
-		MinValue    interface{} `json:"minValue"`
-		MaxLength   interface{} `json:"maxLength"`
-		MinLength   interface{} `json:"minLength"`
-		Default     interface{} `json:"defaultValue"`
-		DefaultTime interface{} `json:"defaultExpression"`
-		Options     []string    `json:"options"`
-		Expression  string      `json:"expression"`
-		Separator   string      `json:"digit"`
-		Medium      string      `json:"protocol"`
-		Format      string      `json:"format"`
-		Fields      []FieldInfo `json:"fields"`
-		Index       int         `json:"index"`
+		Label       string                  `json:"label"`
+		Code        string                  `json:"code"`
+		Type        string                  `json:"type"`
+		NoLabel     string                  `json:"noLabel"`
+		Required    string                  `json:"required"`
+		Unique      string                  `json:"unique"`
+		MaxValue    interface{}             `json:"maxValue"`
+		MinValue    interface{}             `json:"minValue"`
+		MaxLength   interface{}             `json:"maxLength"`
+		MinLength   interface{}             `json:"minLength"`
+		Default     interface{}             `json:"defaultValue"`
+		DefaultTime interface{}             `json:"defaultExpression"`
+		Options     []string                `json:"options"`
+		Expression  string                  `json:"expression"`
+		Separator   string                  `json:"digit"`
+		Medium      string                  `json:"protocol"`
+		Format      string                  `json:"format"`
+		Fields      []FieldInfo             `json:"fields"`
+		Index       int                     `json:"index"`
+		Lookup      *map[string]interface{} `json:"lookup,omitempty"`
 	}
 	err := json.Unmarshal(data, &t)
 	if err != nil {
@@ -1038,7 +1040,7 @@ func (fi *FieldInfo) UnmarshalJSON(data []byte) error {
 		t.MaxValue, t.MinValue, t.MaxLength, t.MinLength,
 		t.Default, t.DefaultTime, t.Options, t.Expression,
 		(t.Separator == "true"),
-		t.Medium, t.Format, t.Fields, t.Index,
+		t.Medium, t.Format, t.Fields, t.Index, t.Lookup,
 	}
 	return nil
 }
@@ -1098,6 +1100,9 @@ func decodeFieldInfo(t AppFormFields, ret map[string]*FieldInfo) {
 					sb = append(sb, *ret[z])
 				}
 				fi.Fields = sb
+			case "lookup":
+				result, _ := (w).(map[string]interface{})
+				fi.Lookup = &result
 			default:
 				break
 			}
