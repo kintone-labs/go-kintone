@@ -72,7 +72,7 @@ func checkAuth(response http.ResponseWriter, request *http.Request) {
 	authBasic := request.Header.Get(AUTH_HEADER_BASIC)
 
 	userAndPass := base64.StdEncoding.EncodeToString(
-		[]byte(KINTONE_USERNAME + ":" + KINTONE_USERNAME))
+		[]byte(KINTONE_USERNAME + ":" + KINTONE_PASSWORD))
 
 	userAndPassBasic := "Basic " + base64.StdEncoding.EncodeToString(
 		[]byte(BASIC_AUTH_USER+":"+BASIC_AUTH_PASSWORD))
