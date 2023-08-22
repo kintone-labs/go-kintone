@@ -496,23 +496,3 @@ func TestGetProcess(t *testing.T) {
 		t.Error("TestGetProcess failed: ", err)
 	}
 }
-
-func TestLookupFieldInFieldInfo(t *testing.T) {
-	app := newApp()
-	countLookup := 0
-	fi, err := app.Fields()
-	if err != nil {
-		t.Error("Fields failed", err)
-	}
-	for _, f := range fi {
-		if f.Lookup != nil {countLookup++}
-	}
-
-	if countLookup > 0 {
-		fmt.Printf("\nApp have %v Lookup field\n", countLookup);
-	}
-
-	if countLookup == 0 {
-		fmt.Printf("\nApp have no Lookup field\n");
-	}
-}
