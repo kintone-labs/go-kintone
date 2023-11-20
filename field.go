@@ -310,7 +310,7 @@ func (f DateTimeField) MarshalJSON() ([]byte, error) {
 
 // User represents a user entry.
 type User struct {
-	Code string `json:"code"` // A unique identifer of the user.
+	Code string `json:"code"` // A unique identifier of the user.
 	Name string `json:"name"` // The user name.
 }
 
@@ -330,7 +330,7 @@ func (f UserField) MarshalJSON() ([]byte, error) {
 
 // Organization represents a department entry.
 type Organization struct {
-	Code string `json:"code"` // A unique identifer of the department.
+	Code string `json:"code"` // A unique identifier of the department.
 	Name string `json:"name"` // The department name.
 }
 
@@ -350,7 +350,7 @@ func (f OrganizationField) MarshalJSON() ([]byte, error) {
 
 // Group represents a group(or role) entry.
 type Group struct {
-	Code string `json:"code"` // A unique identifer of the group(or role).
+	Code string `json:"code"` // A unique identifier of the group(or role).
 	Name string `json:"name"` // The group name.
 }
 

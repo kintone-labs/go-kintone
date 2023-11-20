@@ -23,7 +23,7 @@ type ProcessState struct {
 	Assignee *ProcessAssignee `json:"assignee"`
 }
 
-// ProcessAction representes a process management action
+// ProcessAction represents a process management action
 type ProcessAction struct {
 	Name       string `json:"name"`
 	From       string `json:"from"`
