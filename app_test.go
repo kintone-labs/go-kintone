@@ -182,7 +182,7 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 			return
 		}
 		var bodyRequest RequestBody
-		if err := json.Unmarshal([]byte(body), &bodyRequest); err != nil {
+		if err := json.Unmarshal(body, &bodyRequest); err != nil {
 			http.Error(response, "Body incorrect", http.StatusBadRequest)
 		}
 

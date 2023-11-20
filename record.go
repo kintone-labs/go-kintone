@@ -289,7 +289,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				if err != nil {
 					return nil, err
 				}
-				r, err := decodeRecordData(recordData(rd))
+				r, err := decodeRecordData(rd)
 				if err != nil {
 					return nil, err
 				}
