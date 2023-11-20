@@ -587,6 +587,9 @@ func (app *App) Upload(fileName, contentType string, data io.Reader) (key string
 			escapeQuotes(fileName)))
 	h.Set("Content-Type", contentType)
 	fw, err := w.CreatePart(h)
+	if err != nil {
+		return
+	}
 	if _, err = io.Copy(fw, data); err != nil {
 		return
 	}
