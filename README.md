@@ -1,6 +1,8 @@
 Go binding for kintone API
 ==========================
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/kintone-labs/go-kintone.svg)](https://pkg.go.dev/github.com/kintone-labs/go-kintone)
+
 **WARNING**
 This binding (and kintone itself) is not mature.
 Backward compatibility may not be kept.  Use with caution.
