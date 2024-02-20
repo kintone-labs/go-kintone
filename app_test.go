@@ -107,7 +107,7 @@ func handleResponseProcess(response http.ResponseWriter, request *http.Request) 
 
 func handleResponseForm(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
-	if request.Method == "GET" {
+	if request.Method == http.MethodGet {
 		checkContentType(response, request)
 		testData := GetDataTestForm()
 		fmt.Fprint(response, testData.output)
@@ -116,14 +116,14 @@ func handleResponseForm(response http.ResponseWriter, request *http.Request) {
 
 func handleResponseRecordsCursor(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
-	if request.Method == "GET" {
+	if request.Method == http.MethodGet {
 		testData := GetDataTestGetRecordsByCursor()
 		fmt.Fprint(response, testData.output)
-	} else if request.Method == "DELETE" {
+	} else if request.Method == http.MethodDelete {
 		checkContentType(response, request)
 		testData := GetTestDataDeleteCursor()
 		fmt.Fprint(response, testData.output)
-	} else if request.Method == "POST" {
+	} else if request.Method == http.MethodPost {
 		checkContentType(response, request)
 		testData := GetTestDataCreateCursor()
 		fmt.Fprint(response, testData.output)
@@ -133,10 +133,10 @@ func handleResponseRecordsCursor(response http.ResponseWriter, request *http.Req
 func handleResponseRecordComments(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
 	checkContentType(response, request)
-	if request.Method == "POST" {
+	if request.Method == http.MethodPost {
 		testData := GetTestDataAddRecordComment()
 		fmt.Fprint(response, testData.output)
-	} else if request.Method == "DELETE" {
+	} else if request.Method == http.MethodDelete {
 		testData := GetDataTestDeleteRecordComment()
 		fmt.Fprint(response, testData.output)
 	}
@@ -144,7 +144,7 @@ func handleResponseRecordComments(response http.ResponseWriter, request *http.Re
 
 func handleResponseUploadFile(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
-	if request.Method == "POST" {
+	if request.Method == http.MethodPost {
 		testData := GetDataTestUploadFile()
 		fmt.Fprint(response, testData.output)
 	}
@@ -153,13 +153,13 @@ func handleResponseUploadFile(response http.ResponseWriter, request *http.Reques
 func handleResponseGetRecord(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
 	checkContentType(response, request)
-	if request.Method == "GET" {
+	if request.Method == http.MethodGet {
 		testData := GetTestDataGetRecord()
 		fmt.Fprint(response, testData.output)
-	} else if request.Method == "PUT" {
+	} else if request.Method == http.MethodPut {
 		testData := GetTestDataUpdateRecordByKey()
 		fmt.Fprint(response, testData.output)
-	} else if request.Method == "POST" {
+	} else if request.Method == http.MethodPost {
 		testData := GetTestDataAddRecord()
 		fmt.Fprint(response, testData.output)
 	}
@@ -168,7 +168,7 @@ func handleResponseGetRecord(response http.ResponseWriter, request *http.Request
 func handleResponseGetRecords(response http.ResponseWriter, request *http.Request) {
 	checkAuth(response, request)
 	checkContentType(response, request)
-	if request.Method == "GET" {
+	if request.Method == http.MethodGet {
 		type RequestBody struct {
 			App        uint64   `json:"app,string"`
 			Fields     []string `json:"fields"`
@@ -182,7 +182,7 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 			return
 		}
 		var bodyRequest RequestBody
-		if err := json.Unmarshal([]byte(body), &bodyRequest); err != nil {
+		if err := json.Unmarshal(body, &bodyRequest); err != nil {
 			http.Error(response, "Body incorrect", http.StatusBadRequest)
 		}
 
@@ -193,10 +193,10 @@ func handleResponseGetRecords(response http.ResponseWriter, request *http.Reques
 			testData := GetTestDataGetRecords()
 			fmt.Fprint(response, testData.output)
 		}
-	} else if request.Method == "DELETE" {
+	} else if request.Method == http.MethodDelete {
 		testData := GetTestDataDeleteRecords()
 		fmt.Fprint(response, testData.output)
-	} else if request.Method == "POST" {
+	} else if request.Method == http.MethodPost {
 		testData := GetTestDataAddRecords()
 		fmt.Fprint(response, testData.output)
 	}
@@ -505,14 +505,16 @@ func TestLookupFieldInFieldInfo(t *testing.T) {
 		t.Error("Fields failed", err)
 	}
 	for _, f := range fi {
-		if f.Lookup != nil {countLookup++}
+		if f.Lookup != nil {
+			countLookup++
+		}
 	}
 
 	if countLookup > 0 {
-		fmt.Printf("\nApp have %v Lookup field\n", countLookup);
+		fmt.Printf("\nApp have %v Lookup field\n", countLookup)
 	}
 
 	if countLookup == 0 {
-		fmt.Printf("\nApp have no Lookup field\n");
+		fmt.Printf("\nApp have no Lookup field\n")
 	}
 }

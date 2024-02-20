@@ -42,7 +42,6 @@ func NewRecordWithId(id uint64, fields map[string]interface{}) *Record {
 // NewRecordWithIdAndRevision creates using an existing record id and revision.
 func NewRecordWithIdAndRevision(id uint64, revision int64, fields map[string]interface{}) *Record {
 	return &Record{id, revision, fields}
-
 }
 
 // MarshalJSON marshals field data of a record into JSON.
@@ -290,7 +289,7 @@ func decodeRecordData(data recordData) (*Record, error) {
 				if err != nil {
 					return nil, err
 				}
-				r, err := decodeRecordData(recordData(rd))
+				r, err := decodeRecordData(rd)
 				if err != nil {
 					return nil, err
 				}

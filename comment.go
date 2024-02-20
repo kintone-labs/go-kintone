@@ -5,7 +5,6 @@ import (
 	"errors"
 )
 
-//
 const (
 	ConstCommentMentionTypeGroup      = "GROUP"
 	ConstCommentMentionTypeDepartment = "ORGANIZATION"

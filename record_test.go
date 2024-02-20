@@ -434,14 +434,7 @@ func TestDecodeRecordsWithTotalCount(t *testing.T) {
 		"totalCount": "9999"
 	}`)
 
-	type Record struct {
-		id       uint64
-		revision int64
-		Fields   map[string]interface{}
-	}
-
 	rec, totalCount, err := DecodeRecordsWithTotalCount(b)
-
 	if err != nil {
 		t.Fatal(err)
 	}

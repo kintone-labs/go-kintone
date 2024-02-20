@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -314,7 +313,7 @@ func isJSON(contentType string) bool {
 }
 
 func parseResponse(resp *http.Response) ([]byte, error) {
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 
 	if err != nil {
@@ -542,7 +541,7 @@ func (app *App) Download(fileKey string) (*FileData, error) {
 			}
 		}
 		var ae AppError
-		body, _ := ioutil.ReadAll(resp.Body)
+		body, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
 		json.Unmarshal(body, &ae)
 		ae.HttpStatus = resp.Status
@@ -573,7 +572,7 @@ func escapeQuotes(s string) string {
 //
 // If successfully uploaded, the key string of the uploaded file is returned.
 func (app *App) Upload(fileName, contentType string, data io.Reader) (key string, err error) {
-	f, err := ioutil.TempFile("", "go-kintone-")
+	f, err := os.CreateTemp("", "go-kintone-")
 	if err != nil {
 		return
 	}
@@ -588,6 +587,9 @@ func (app *App) Upload(fileName, contentType string, data io.Reader) (key string
 			escapeQuotes(fileName)))
 	h.Set("Content-Type", contentType)
 	fw, err := w.CreatePart(h)
+	if err != nil {
+		return
+	}
 	if _, err = io.Copy(fw, data); err != nil {
 		return
 	}
@@ -1212,7 +1214,6 @@ func updateIndexToField(fieldCode [][]byte, fieldInfo map[string]*FieldInfo) {
 					sortedFieldCode.Fields[k].Index = i
 					i += 1
 				}
-
 			}
 		}
 	}
